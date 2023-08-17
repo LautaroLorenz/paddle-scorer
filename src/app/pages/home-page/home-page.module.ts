@@ -4,11 +4,12 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { HomePageComponent } from './home-page.component';
 import { CenterLayoutModule } from 'src/app/components/layout/center-layout/center-layout.module';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 export const routes: Routes = [{ path: '', component: HomePageComponent }];
 
 @NgModule({
   declarations: [HomePageComponent],
-  imports: [CommonModule, RouterModule.forChild(routes), CenterLayoutModule],
+  imports: [CommonModule, RouterModule.forChild(routes), SharedModule, CenterLayoutModule],
 })
 export class HomePageModule {}
