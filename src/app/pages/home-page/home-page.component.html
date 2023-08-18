@@ -31,7 +31,8 @@
                     class="player-button"
                     icon="pi pi-trash"
                     styleClass="p-button-danger"
-                    (click)="removePlayerControl(i)">
+                    [disabled]="players.controls.length <= 2"
+                    (click)="players.controls.length > 2 && removePlayerControl(i)">
                 </p-button>
             </div>
         </div>
@@ -75,7 +76,7 @@
     <button
         pButton
         type="button"
-        class="p-button-raised p-button-rounded p-button-success start-button" 
+        class="p-button-raised p-button-rounded p-button-success start-button"
         [disabled]="!form.valid"
         (click)="startGame()">
         Comenzar

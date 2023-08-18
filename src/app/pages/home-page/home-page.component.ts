@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { getRandomBrightHexColor } from 'src/app/core/color-generator.core';
 
@@ -6,14 +6,17 @@ import { getRandomBrightHexColor } from 'src/app/core/color-generator.core';
     templateUrl: './home-page.component.html',
     styleUrls: ['./home-page.component.scss']
 })
-export class HomePageComponent {
+export class HomePageComponent implements OnInit {
     form!: FormGroup;
 
     private readonly INIT_PLAYERS = 4;
 
     constructor(private fb: FormBuilder) {
         this.buildForm();
-        this.generateInitPlayers(this.INIT_PLAYERS);
+    }
+
+    ngOnInit(): void {
+        this.loadFormValue();
     }
 
     get players(): FormArray {
@@ -43,7 +46,22 @@ export class HomePageComponent {
     }
 
     startGame(): void {
-        // TODO:
+        this.saveFormValue();
+    }
+
+    private loadFormValue(): void {
+        const playersLength = +localStorage.getItem('playersLength')! ?? this.INIT_PLAYERS;
+        const savedValue = localStorage.getItem('value');
+        this.generateInitPlayers(playersLength);
+        if (savedValue) {
+            const value = JSON.parse(savedValue);
+            this.form.setValue(value);
+        }
+    }
+
+    private saveFormValue(): void {
+        localStorage.setItem('playersLength', JSON.stringify(this.players.length));
+        localStorage.setItem('value', JSON.stringify(this.form.getRawValue()));
     }
 
     private buildForm(): void {
