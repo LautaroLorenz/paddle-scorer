@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from '@angular/core';
+import { Point } from 'src/app/models/point.model';
 import { Score } from 'src/app/models/score.model';
 
 @Component({
@@ -9,5 +10,6 @@ import { Score } from 'src/app/models/score.model';
 })
 export class ScoreComponent {
     @Input() score!: Score;
-    @Output() scoreClick = new EventEmitter<Score>();
+    @Input() point!: Point;
+    @Output() scoreClick = new EventEmitter<void>();
 }

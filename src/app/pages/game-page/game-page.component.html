@@ -12,12 +12,19 @@
             [popup]="true"
             [model]="menuOptions"></p-menu>
     </div>
-    <app-stadium class="stadium">
+    <app-stadium
+        class="stadium"
+        [ngClass]="{
+            'score-animation': game.isGoldenPoint,
+            'player-animation': game.isGoldenSet,
+            'stadium-animation': game.isGoldenGame
+        }">
         <app-score
             class="stadium-score score-team-0"
             score-team-0
             [score]="getScoreAt(game, 0)"
-            (click)="incrementScoreAt(game, 0)">
+            [point]="game.points[0]"
+            (scoreClick)="incrementPointAt(game, 0)">
         </app-score>
         <app-player
             slot-0-0
@@ -47,7 +54,8 @@
             class="stadium-score score-team-1"
             score-team-1
             [score]="getScoreAt(game, 1)"
-            (click)="incrementScoreAt(game, 1)">
+            [point]="game.points[1]"
+            (scoreClick)="incrementPointAt(game, 1)">
         </app-score>
     </app-stadium>
     <p-dialog

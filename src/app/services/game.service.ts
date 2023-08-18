@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { Game } from '../models/game.model';
-import { Player } from '../models/player.model';
+import { Player, PlayerIndex } from '../models/player.model';
 import { Score } from '../models/score.model';
-import { Team } from '../models/team.model';
+import { Team, TeamIndex } from '../models/team.model';
+import { Point } from '../models/point.model';
 
 @Injectable({
     providedIn: 'root'
@@ -30,7 +31,12 @@ export class GameService {
                     sets: 0
                 }
             }
-        ]
+        ],
+        points: [0, 0],
+        isGoldenPoint: false,
+        isGoldenSet: false,
+        isGoldenGame: false,
+        isEndGame: false
     });
 
     constructor() {
@@ -41,7 +47,7 @@ export class GameService {
         return this.game.asObservable();
     }
 
-    setGamePlayerAt(teamIndex: number, playerIndex: number, player: Player): void {
+    setGamePlayerAt(teamIndex: TeamIndex, playerIndex: PlayerIndex, player: Player): void {
         const game: Game = this.game.value;
         for (let i = 0; i < game.teams.length; i++) {
             const team = game.teams[i];
@@ -75,18 +81,58 @@ export class GameService {
                         sets: 0
                     }
                 }
-            ]
+            ],
+            points: [0, 0],
+            isGoldenPoint: false,
+            isGoldenSet: false,
+            isGoldenGame: false,
+            isEndGame: false
         };
         this.saveGameOnStorage(game, 'override');
     }
 
-    incrementScoreAt(gameStatus: Game, teamIndex: number): Game {
-        const newScore: Score = this.calculateTeamScore(gameStatus.teams[teamIndex]);
-        gameStatus.teams[teamIndex].score = newScore;
+    incrementPointAt(gameStatus: Game, teamIndex: TeamIndex): void {
+        const { points } = gameStatus;
+        const newPoints: [Point, Point] = [points[0], points[1]];
+        const otherTeamIndex = teamIndex === 0 ? 1 : 0;
+        let { score: newScoreTeamIndex } = gameStatus.teams[teamIndex];
+        let { score: newScoreOtherTeamIndex } = gameStatus.teams[otherTeamIndex];
+        switch (points[teamIndex]) {
+            case 0:
+                newPoints[teamIndex] = 15;
+                break;
+            case 15:
+                newPoints[teamIndex] = 30;
+                break;
+            case 30:
+                newPoints[teamIndex] = 40;
+                break;
+            case 40:
+                newPoints[teamIndex] = 0;
+                newPoints[otherTeamIndex] = 0;
+                newScoreTeamIndex.points = newScoreTeamIndex.points + 1;
+                if (newScoreTeamIndex.points === gameStatus.score.points) {
+                    newScoreTeamIndex = {
+                        ...newScoreTeamIndex,
+                        sets: newScoreTeamIndex.sets + 1
+                    };
+                    newScoreTeamIndex.points = 0;
+                    newScoreOtherTeamIndex = {
+                        ...newScoreOtherTeamIndex,
+                        points: 0
+                    };
+                }
+                break;
+        }
+        gameStatus.teams[teamIndex].score = newScoreTeamIndex;
+        gameStatus.teams[otherTeamIndex].score = newScoreOtherTeamIndex;
+        gameStatus.points = newPoints;
+        gameStatus.isGoldenPoint = this.isGoldenPoint(gameStatus);
+        gameStatus.isGoldenSet = this.isGoldenSet(gameStatus);
+        gameStatus.isGoldenGame = this.isGoldenGame(gameStatus);
+        gameStatus.isEndGame = this.isEndGame(gameStatus);
         this.saveGameOnStorage(gameStatus, 'append');
-        return gameStatus;
     }
-
     undoGameStatus(): void {
         const gameHistory: Game[] = this.getGameHistoryFromStorage();
         if (gameHistory.length === 1) {
@@ -105,7 +151,7 @@ export class GameService {
         this.setGameHistory(newGameHistory);
     }
 
-    isEndGame(game: Game): number | false {
+    private isEndGame(game: Game): TeamIndex | false {
         if (this.isTeamWinner(game.score, game.teams[0])) {
             return 0;
         }
@@ -115,32 +161,28 @@ export class GameService {
         return false;
     }
 
-    private isTeamWinner(gameScore: Score, team: Team): boolean {
-        return team.score.sets === gameScore.sets;
+    private isGoldenPoint(game: Game): boolean {
+        return game.points[0] === 40 && game.points[1] === 40;
     }
 
-    private calculateTeamScore(team: Team): Score {
-        const { score } = team;
-        const newScore: Score = {
-            sets: score.sets,
-            points: score.points
-        };
-        switch (score.points) {
-            case 0:
-                newScore.points = 15;
-                break;
-            case 15:
-                newScore.points = 30;
-                break;
-            case 30:
-                newScore.points = 40;
-                break;
-            case 40:
-                newScore.points = 0;
-                newScore.sets = score.sets + 1;
-                break;
-        }
-        return newScore;
+    private isGoldenSet(game: Game): boolean {
+        return (
+            this.isGoldenPoint(game) &&
+            game.teams[0].score.points + 1 === game.score.points &&
+            game.teams[1].score.points + 1 === game.score.points
+        );
+    }
+
+    private isGoldenGame(game: Game): boolean {
+        return (
+            this.isGoldenSet(game) &&
+            game.teams[0].score.sets + 1 === game.score.sets &&
+            game.teams[1].score.sets + 1 === game.score.sets
+        );
+    }
+
+    private isTeamWinner(gameScore: Score, team: Team): boolean {
+        return team.score.sets === gameScore.sets;
     }
 
     private saveGameOnStorage(gameStatus: Game, mode: 'append' | 'override'): void {

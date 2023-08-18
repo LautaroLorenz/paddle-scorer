@@ -5,3 +5,5 @@ export interface Team {
     players: [Player | undefined, Player | undefined];
     score: Score;
 }
+
+export type TeamIndex = 0 | 1;

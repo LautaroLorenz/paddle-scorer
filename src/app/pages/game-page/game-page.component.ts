@@ -1,27 +1,32 @@
-import { Component } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { Game } from 'src/app/models/game.model';
-import { Player } from 'src/app/models/player.model';
+import { Player, PlayerIndex } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { Score } from 'src/app/models/score.model';
+import { TeamIndex } from 'src/app/models/team.model';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
     templateUrl: './game-page.component.html',
     styleUrls: ['./game-page.component.scss']
 })
-export class GamePageComponent {
+export class GamePageComponent implements OnInit, OnDestroy {
     menuOptions: MenuItem[];
     displayPlayerSelector: boolean = false;
     playerSelectorHeader: string = '';
-    private playerSelectorTeamIndex: number | null = null;
-    private playerSelectorPlayerIndex: number | null = null;
+    private isFullScreen: boolean = false;
+    private playerSelectorTeamIndex: TeamIndex | null = null;
+    private playerSelectorPlayerIndex: PlayerIndex | null = null;
+    private _onDestroy = new Subject<void>();
 
     constructor(
         private gameService: GameService,
         private router: Router,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        @Inject(DOCUMENT) private document: any
     ) {
         this.menuOptions = this.getMenuOptions();
     }
@@ -30,15 +35,33 @@ export class GamePageComponent {
         return this.gameService.game$;
     }
 
-    getPlayerAt(game: Game, teamIndex: number, playerIndex: number): Player | undefined {
+    ngOnInit(): void {
+        this.gameService.game$.pipe(takeUntil(this._onDestroy)).subscribe(({ isEndGame }) => {
+            if (isEndGame !== false) {
+                const winnerTeamIndex = isEndGame;
+                this.confirmationService.confirm({
+                    header: `¡¡¡ Ganador equipo ${winnerTeamIndex + 1} !!!`,
+                    message: 'Fin del juego',
+                    closeOnEscape: false,
+                    acceptLabel: 'reiniciar',
+                    rejectVisible: false,
+                    accept: () => {
+                        this.gameService.restartGame();
+                    }
+                });
+            }
+        });
+    }
+
+    getPlayerAt(game: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex): Player | undefined {
         return game.teams[teamIndex].players[playerIndex];
     }
 
-    getScoreAt(game: Game, teamIndex: number): Score {
+    getScoreAt(game: Game, teamIndex: TeamIndex): Score {
         return game.teams[teamIndex].score;
     }
 
-    openPlayerSelector(teamIndex: number, playerIndex: number): void {
+    openPlayerSelector(teamIndex: TeamIndex, playerIndex: PlayerIndex): void {
         this.playerSelectorTeamIndex = teamIndex;
         this.playerSelectorPlayerIndex = playerIndex;
         this.playerSelectorHeader = `Elegir para el equipo ${teamIndex + 1}`;
@@ -52,26 +75,18 @@ export class GamePageComponent {
         this.playerSelectorPlayerIndex = null;
     }
 
-    incrementScoreAt(game: Game, teamIndex: number): void {
-        const newGameStatus = this.gameService.incrementScoreAt(game, teamIndex);
-        const winnerTeamIndex = this.gameService.isEndGame(newGameStatus);
-        if(winnerTeamIndex !== false) {
-            this.confirmationService.confirm({
-                header: `¡¡¡ Ganador equipo ${winnerTeamIndex + 1} !!!`,
-                message: 'Fin del juego',
-                closeOnEscape: false,
-                acceptLabel: 'reiniciar',
-                rejectVisible: false,
-                accept: () => {
-                    this.gameService.restartGame();
-                }
-            });
-        }
+    incrementPointAt(game: Game, teamIndex: TeamIndex): void {
+        this.gameService.incrementPointAt(game, teamIndex);
+    }
+
+    ngOnDestroy(): void {
+        this._onDestroy.next();
+        this._onDestroy.complete();
     }
 
     // TODO: contar cuantos partidos jugó cada jugador, rotar jugadores al finalizar con un algoritmo
     // TODO: Rotar con el saque: podria haber un boton sobre el slot para elegir quien inicia el saque
-    // TODO: animación punto de oro;
+    // TODO: detectar portrait y landscape
     private getMenuOptions(): MenuItem[] {
         return [
             {
@@ -81,7 +96,20 @@ export class GamePageComponent {
                     this.gameService.undoGameStatus();
                 }
             },
-            // TODO: { label: 'Full screen', icon: 'pi pi-window-maximize' },
+            {
+                label: `${this.isFullScreen ? 'Quit' : ''} full screen`,
+                icon: `pi pi-window-${this.isFullScreen ? 'minimize' : 'maximize'}`,
+                command: () => {
+                    if (this.isFullScreen) {
+                        this.document?.exitFullscreen();
+                        this.isFullScreen = false;
+                    } else {
+                        this.document?.documentElement?.requestFullscreen();
+                        this.isFullScreen = true;
+                    }
+                    this.menuOptions = this.getMenuOptions();
+                }
+            },
             {
                 label: 'reiniciar',
                 icon: 'pi pi-refresh',
