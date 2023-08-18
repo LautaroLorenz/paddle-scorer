@@ -18,46 +18,30 @@
             score-left>
             SL
         </div>
-        <div
-            class="stadium-slot slot-left"
+        <app-player
             slot-0-0
-            (click)="openPlayerSelector(0, 0)">
-            <div
-                class="slot-background-color"
-                [ngStyle]="{ background: getPlayerAt(game, 0, 0)?.color || 'white' }"></div>
-            <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 0, 0)?.name }}</span>
-        </div>
-        <div
-            class="stadium-slot slot-left"
+            class="stadium-player player-team-1"
+            [player]="getPlayerAt(game, 0, 0)"
+            (playerClick)="openPlayerSelector(0, 0)">
+        </app-player>        
+        <app-player
             slot-0-1
-            (click)="openPlayerSelector(0, 1)">
-            <div
-                class="slot-background-color"
-                [ngStyle]="{ background: getPlayerAt(game, 0, 1)?.color || 'white' }"></div>
-            <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 0, 1)?.name }}</span>
-        </div>
-        <div
-            class="stadium-slot slot-right"
+            class="stadium-player player-team-1"
+            [player]="getPlayerAt(game, 0, 1)"
+            (playerClick)="openPlayerSelector(0, 1)">
+        </app-player>
+        <app-player
             slot-1-0
-            (click)="openPlayerSelector(1, 0)">
-            <div
-                class="slot-background-color"
-                [ngStyle]="{ background: getPlayerAt(game, 1, 0)?.color || 'white' }"></div>
-            <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 1, 0)?.name }}</span>
-        </div>
-        <div
-            class="stadium-slot slot-right"
+            class="stadium-player player-team-2"
+            [player]="getPlayerAt(game, 1, 0)"
+            (playerClick)="openPlayerSelector(1, 0)">
+        </app-player>
+        <app-player
             slot-1-1
-            (click)="openPlayerSelector(1, 1)">
-            <div
-                class="slot-background-color"
-                [ngStyle]="{ background: getPlayerAt(game, 1, 1)?.color || 'white' }"></div>
-            <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 1, 1)?.name }}</span>
-        </div>
+            class="stadium-player player-team-2"
+            [player]="getPlayerAt(game, 1, 1)"
+            (playerClick)="openPlayerSelector(1, 1)">
+        </app-player>
         <div
             class="stadium-score"
             score-right>

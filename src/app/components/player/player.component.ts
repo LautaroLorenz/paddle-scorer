@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from '@angular/core';
 import { Player } from 'src/app/models/player.model';
 
 @Component({
@@ -8,5 +8,6 @@ import { Player } from 'src/app/models/player.model';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlayerComponent {
-  @Input() player!: Player;
+  @Input() player: Player | undefined = undefined;
+  @Output() playerClick = new EventEmitter<Player | undefined>(); 
 }
