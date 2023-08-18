@@ -5,6 +5,7 @@ import { Player } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
+import { Score } from 'src/app/models/score.model';
 
 @Component({
     templateUrl: './game-page.component.html',
@@ -33,6 +34,10 @@ export class GamePageComponent {
         return game.teams[teamIndex].players[playerIndex];
     }
 
+    getScoreAt(game: Game, teamIndex: number): Score {
+        return game.teams[teamIndex].score;
+    }
+
     openPlayerSelector(teamIndex: number, playerIndex: number): void {
         this.playerSelectorTeamIndex = teamIndex;
         this.playerSelectorPlayerIndex = playerIndex;
@@ -42,14 +47,31 @@ export class GamePageComponent {
 
     playerSelectorClick({ option }: { option: Player }): void {
         this.displayPlayerSelector = false;
-        this.gameService.setGamePlayer(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
+        this.gameService.setGamePlayerAt(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
         this.playerSelectorTeamIndex = null;
         this.playerSelectorPlayerIndex = null;
     }
 
-    // TODO: hacer la sumatoria de score y el fin de juego
+    incrementScoreAt(game: Game, teamIndex: number): void {
+        const newGameStatus = this.gameService.incrementScoreAt(game, teamIndex);
+        const winnerTeamIndex = this.gameService.isEndGame(newGameStatus);
+        if(winnerTeamIndex !== false) {
+            this.confirmationService.confirm({
+                header: `¡¡¡ Ganador equipo ${winnerTeamIndex + 1} !!!`,
+                message: 'Fin del juego',
+                closeOnEscape: false,
+                acceptLabel: 'reiniciar',
+                rejectVisible: false,
+                accept: () => {
+                    this.gameService.restartGame();
+                }
+            });
+        }
+    }
+
     // TODO: contar cuantos partidos jugó cada jugador, rotar jugadores al finalizar con un algoritmo
     // TODO: Rotar con el saque: podria haber un boton sobre el slot para elegir quien inicia el saque
+    // TODO: animación punto de oro;
     private getMenuOptions(): MenuItem[] {
         return [
             {
