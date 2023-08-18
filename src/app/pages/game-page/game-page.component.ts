@@ -3,18 +3,27 @@ import { Observable } from 'rxjs';
 import { Game } from 'src/app/models/game.model';
 import { Player } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
+import { ConfirmationService, MenuItem } from 'primeng/api';
+import { Router } from '@angular/router';
 
 @Component({
     templateUrl: './game-page.component.html',
     styleUrls: ['./game-page.component.scss']
 })
 export class GamePageComponent {
+    menuOptions: MenuItem[];
     displayPlayerSelector: boolean = false;
     playerSelectorHeader: string = '';
     private playerSelectorTeamIndex: number | null = null;
-    private playerSelectorPlayerIndex: number | null = null
+    private playerSelectorPlayerIndex: number | null = null;
 
-    constructor(private gameService: GameService) {}
+    constructor(
+        private gameService: GameService,
+        private router: Router,
+        private confirmationService: ConfirmationService
+    ) {
+        this.menuOptions = this.getMenuOptions();
+    }
 
     get game$(): Observable<Game> {
         return this.gameService.game$;
@@ -36,5 +45,31 @@ export class GamePageComponent {
         this.gameService.setGamePlayer(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
         this.playerSelectorTeamIndex = null;
         this.playerSelectorPlayerIndex = null;
+    }
+
+    // TODO: hacer la sumatoria de score y el fin de juego
+    // TODO: contar cuantos partidos jugó cada jugador, rotar jugadores al finalizar con un algoritmo
+    // TODO: Rotar con el saque: podria haber un boton sobre el slot para elegir quien inicia el saque
+    private getMenuOptions(): MenuItem[] {
+        return [
+            { label: 'deshacer cambio', icon: 'pi pi-undo' }, // TODO:
+            { label: 'Full screen', icon: 'pi pi-window-maximize' }, // TODO:
+            { label: 'reiniciar', icon: 'pi pi-refresh' }, // TODO:
+            {
+                label: 'Ir al inicio',
+                icon: 'pi pi-home',
+                command: () => {
+                    this.confirmationService.confirm({
+                        header: 'Ir al inicio',
+                        message: 'Al salir se borrará el progreso, continuar?',
+                        closeOnEscape: false,
+                        acceptLabel: 'Salir',
+                        accept: () => {
+                            this.router.navigate(['home']);
+                        }
+                    });
+                }
+            }
+        ];
     }
 }

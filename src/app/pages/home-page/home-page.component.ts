@@ -54,7 +54,7 @@ export class HomePageComponent implements OnInit {
     startGame(): void {
         this.saveFormValue();
         const { players, score } = this.form.getRawValue();
-        this.gameService.setGame(players, score);
+        this.gameService.initGame(players, score);
         this.router.navigate(['game']);
     }
 

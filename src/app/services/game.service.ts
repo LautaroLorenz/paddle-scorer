@@ -33,7 +33,7 @@ export class GameService {
     });
 
     constructor() {
-        this.loadGame();
+        this.loadGameFromStorage();
     }
 
     get game$(): Observable<Game> {
@@ -46,18 +46,16 @@ export class GameService {
             const team = game.teams[i];
             for (let f = 0; f < team.players.length; f++) {
                 const splotPlayer = team.players[f];
-                if(splotPlayer?.name === player?.name && splotPlayer?.color === player?.color) {
+                if (splotPlayer?.name === player?.name && splotPlayer?.color === player?.color) {
                     team.players[f] = undefined;
                 }
             }
         }
         game.teams[teamIndex].players[playerIndex] = player;
-        console.log(game);
-        this.game.next(game);
-        this.saveGame(game);
+        this.saveGameOnStorage(game, 'append');
     }
 
-    setGame(participants: Player[], score: Score): void {
+    initGame(participants: Player[], score: Score): void {
         const game: Game = {
             score,
             participants,
@@ -78,19 +76,32 @@ export class GameService {
                 }
             ]
         };
-        this.game.next(game);
-        this.saveGame(game);
+        this.saveGameOnStorage(game, 'override');
     }
 
-    private saveGame(game: Game): void {
-        localStorage.setItem('game', JSON.stringify(game));
-    }
-
-    private loadGame(): void {
-        const game = localStorage.getItem('game');
-        if (typeof game !== 'string') {
-            return;
+    private saveGameOnStorage(gameStatus: Game, mode: 'append' | 'override'): void {
+        let newGameHistory: Game[] = [];
+        if (mode === 'override') {
+            newGameHistory = [gameStatus];
         }
-        this.game.next(JSON.parse(game));
+        if (mode === 'append') {
+            const gameHistory: Game[] = this.getGameHistoryFromStorage();
+            newGameHistory = gameHistory.concat(gameStatus);
+        }
+        localStorage.setItem('gameHistory', JSON.stringify(newGameHistory));
+        this.game.next(newGameHistory[newGameHistory.length - 1]);
+    }
+
+    private loadGameFromStorage(): void {
+        const gameHistory: Game[] = this.getGameHistoryFromStorage();
+        this.game.next(gameHistory[gameHistory.length - 1]);
+    }
+
+    private getGameHistoryFromStorage(): Game[] {
+        const history = localStorage.getItem('gameHistory');
+        if (history) {
+            return JSON.parse(history);
+        }
+        return [];
     }
 }
