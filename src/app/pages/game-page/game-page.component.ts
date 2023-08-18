@@ -9,6 +9,10 @@ import { GameService } from 'src/app/services/game.service';
     styleUrls: ['./game-page.component.scss']
 })
 export class GamePageComponent {
+    displayPlayerSelector: boolean = false;
+    playerSelectorHeader: string = '';
+    private playerSelectorTeamIndex: number | null = null;
+    private playerSelectorPlayerIndex: number | null = null
 
     constructor(private gameService: GameService) {}
 
@@ -21,6 +25,16 @@ export class GamePageComponent {
     }
 
     openPlayerSelector(teamIndex: number, playerIndex: number): void {
-        // this.gameService.setGamePlayer(teamIndex, playerIndex, this.draggedPlayer);
+        this.playerSelectorTeamIndex = teamIndex;
+        this.playerSelectorPlayerIndex = playerIndex;
+        this.playerSelectorHeader = `Elegir para el equipo ${teamIndex + 1}`;
+        this.displayPlayerSelector = true;
+    }
+
+    playerSelectorClick({ option }: { option: Player }): void {
+        this.displayPlayerSelector = false;
+        this.gameService.setGamePlayer(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
+        this.playerSelectorTeamIndex = null;
+        this.playerSelectorPlayerIndex = null;
     }
 }

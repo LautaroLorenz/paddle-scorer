@@ -1,6 +1,4 @@
-<!-- TODO: reconvertir a selects y arreglar el responsive. -->
 <!-- TODO: hacer la sumatoria de score, revertir ultimo puntaje, y el fin de juego (reiniciar). -->
-<!-- TODO: Cunado eligen un participante ocupa el slot, y si ya estaba en otro slot se deja el slot limpio. -->
 <!-- TODO: contar cuantos partidos jugó cada jugador, rotar jugadores al finalizar con un algoritmo -->
 <ng-container *ngIf="game$ | async as game">
     <div class="game-title">
@@ -21,7 +19,7 @@
                 class="slot-background-color"
                 [ngStyle]="{ background: getPlayerAt(game, 0, 0)?.color || 'white' }"></div>
             <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 0, 0)?.name || '1' }}</span>
+            <span class="slot-span">{{ getPlayerAt(game, 0, 0)?.name }}</span>
         </div>
         <div
             class="stadium-slot slot-left"
@@ -31,7 +29,7 @@
                 class="slot-background-color"
                 [ngStyle]="{ background: getPlayerAt(game, 0, 1)?.color || 'white' }"></div>
             <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 0, 1)?.name || '2' }}</span>
+            <span class="slot-span">{{ getPlayerAt(game, 0, 1)?.name }}</span>
         </div>
         <div
             class="stadium-slot slot-right"
@@ -41,7 +39,7 @@
                 class="slot-background-color"
                 [ngStyle]="{ background: getPlayerAt(game, 1, 0)?.color || 'white' }"></div>
             <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 1, 0)?.name || '3' }}</span>
+            <span class="slot-span">{{ getPlayerAt(game, 1, 0)?.name }}</span>
         </div>
         <div
             class="stadium-slot slot-right"
@@ -51,7 +49,7 @@
                 class="slot-background-color"
                 [ngStyle]="{ background: getPlayerAt(game, 1, 1)?.color || 'white' }"></div>
             <i class="pi pi-user"></i>
-            <span class="slot-span">{{ getPlayerAt(game, 1, 1)?.name || '4' }}</span>
+            <span class="slot-span">{{ getPlayerAt(game, 1, 1)?.name }}</span>
         </div>
         <div
             class="stadium-score"
@@ -59,4 +57,14 @@
             SR
         </div>
     </app-stadium>
+    <p-dialog
+        position="right"
+        [modal]="true"
+        [header]="playerSelectorHeader"
+        [(visible)]="displayPlayerSelector">
+        <p-listbox
+            [options]="game.participants"
+            optionLabel="name"
+            optionValue="name" (onClick)="playerSelectorClick($event)"></p-listbox>
+    </p-dialog>
 </ng-container>
