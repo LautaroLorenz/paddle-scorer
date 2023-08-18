@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { getRandomBrightHexColor } from 'src/app/core/color-generator.core';
+import { GameService } from 'src/app/services/game.service';
 
 @Component({
     templateUrl: './home-page.component.html',
@@ -11,7 +13,11 @@ export class HomePageComponent implements OnInit {
 
     private readonly INIT_PLAYERS = 4;
 
-    constructor(private fb: FormBuilder) {
+    constructor(
+        private fb: FormBuilder,
+        private gameService: GameService,
+        private router: Router
+    ) {
         this.buildForm();
     }
 
@@ -47,12 +53,15 @@ export class HomePageComponent implements OnInit {
 
     startGame(): void {
         this.saveFormValue();
+        const { players, score } = this.form.getRawValue();
+        this.gameService.setGame(players, score);
+        this.router.navigate(['game']);
     }
 
     private loadFormValue(): void {
-        const playersLength = +localStorage.getItem('playersLength')! ?? this.INIT_PLAYERS;
+        const playersLength = localStorage.getItem('playersLength');
         const savedValue = localStorage.getItem('value');
-        this.generateInitPlayers(playersLength);
+        this.generateInitPlayers(playersLength ? +playersLength : this.INIT_PLAYERS);
         if (savedValue) {
             const value = JSON.parse(savedValue);
             this.form.setValue(value);
