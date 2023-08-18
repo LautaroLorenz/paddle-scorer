@@ -59,6 +59,7 @@ export class GameService {
             }
         }
         this.game.next(game);
+        this.saveGame(game);
     }
 
     setGame(participants: Player[], score: Score): void {
