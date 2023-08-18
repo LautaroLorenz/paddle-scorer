@@ -9,7 +9,6 @@ import { GameService } from 'src/app/services/game.service';
     styleUrls: ['./game-page.component.scss']
 })
 export class GamePageComponent {
-    private draggedPlayer: Player | null = null;
 
     constructor(private gameService: GameService) {}
 
@@ -17,19 +16,11 @@ export class GamePageComponent {
         return this.gameService.game$;
     }
 
-    dragStart(player: Player): void {
-        this.draggedPlayer = player;
+    getPlayerAt(game: Game, teamIndex: number, playerIndex: number): Player | undefined {
+        return game.teams[teamIndex].players[playerIndex];
     }
 
-    dragEnd(): void {
-        this.draggedPlayer = null;
-    }
-
-    drop(teamIndex: number, playerIndex: number): void {
-        if (!this.draggedPlayer) {
-            return;
-        }
-        this.gameService.setGamePlayer(teamIndex, playerIndex, this.draggedPlayer);
-        this.draggedPlayer = null;
+    openPlayerSelector(teamIndex: number, playerIndex: number): void {
+        // this.gameService.setGamePlayer(teamIndex, playerIndex, this.draggedPlayer);
     }
 }

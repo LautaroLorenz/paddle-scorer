@@ -1,0 +1,26 @@
+<div class="side side-left">
+    <div class="side-score score-left">
+        <ng-content select="[score-left]"></ng-content>
+    </div>
+    <div class="side-slots slots-left">
+        <div class="side-slot slot-top">
+            <ng-content select="[slot-0-0]"></ng-content>
+        </div>
+        <div class="side-slot slot-bottom">
+            <ng-content select="[slot-0-1]"></ng-content>
+        </div>
+    </div>
+</div>
+<div class="side side-right">
+    <div class="side-slots slots-right">
+        <div class="side-slot slot-top">
+            <ng-content select="[slot-1-0]"></ng-content>
+        </div>
+        <div class="side-slot slot-bottom">
+            <ng-content select="[slot-1-1]"></ng-content>
+        </div>
+    </div>
+    <div class="side-score score-right">
+        <ng-content select="[score-right]"></ng-content>
+    </div>
+</div>

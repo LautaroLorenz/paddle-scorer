@@ -14,22 +14,22 @@ export class GameService {
             sets: 3
         },
         participants: [],
-        team1: {
-            player1: undefined,
-            player2: undefined,
-            score: {
-                points: 0,
-                sets: 0
+        teams: [
+            {
+                players: [undefined, undefined],
+                score: {
+                    points: 0,
+                    sets: 0
+                }
+            },
+            {
+                players: [undefined, undefined],
+                score: {
+                    points: 0,
+                    sets: 0
+                }
             }
-        },
-        team2: {
-            player1: undefined,
-            player2: undefined,
-            score: {
-                points: 0,
-                sets: 0
-            }
-        }
+        ]
     });
 
     constructor() {
@@ -41,23 +41,18 @@ export class GameService {
     }
 
     setGamePlayer(teamIndex: number, playerIndex: number, player: Player): void {
-        const game = this.game.value;
-        if (teamIndex === 1) {
-            if (playerIndex === 1) {
-                game.team1.player1 = player;
-            }
-            if (playerIndex === 2) {
-                game.team1.player2 = player;
-            }
-        }
-        if (teamIndex === 2) {
-            if (playerIndex === 1) {
-                game.team2.player1 = player;
-            }
-            if (playerIndex === 2) {
-                game.team2.player2 = player;
+        const game: Game = this.game.value;
+        for (let i = 0; i < game.teams.length; i++) {
+            const team = game.teams[i];
+            for (let f = 0; f < team.players.length; f++) {
+                const splotPlayer = team.players[f];
+                if(splotPlayer?.name === player?.name && splotPlayer?.color === player?.color) {
+                    team.players[f] = undefined;
+                }
             }
         }
+        game.teams[teamIndex].players[playerIndex] = player;
+        console.log(game);
         this.game.next(game);
         this.saveGame(game);
     }
@@ -66,22 +61,22 @@ export class GameService {
         const game: Game = {
             score,
             participants,
-            team1: {
-                player1: undefined,
-                player2: undefined,
-                score: {
-                    points: 0,
-                    sets: 0
+            teams: [
+                {
+                    players: [undefined, undefined],
+                    score: {
+                        points: 0,
+                        sets: 0
+                    }
+                },
+                {
+                    players: [undefined, undefined],
+                    score: {
+                        points: 0,
+                        sets: 0
+                    }
                 }
-            },
-            team2: {
-                player1: undefined,
-                player2: undefined,
-                score: {
-                    points: 0,
-                    sets: 0
-                }
-            }
+            ]
         };
         this.game.next(game);
         this.saveGame(game);

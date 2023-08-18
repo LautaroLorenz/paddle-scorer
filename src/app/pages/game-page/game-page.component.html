@@ -1,54 +1,62 @@
-<!-- TODO: drag y drop no funciona en mobile, reconvertir a selects y arreglar el responsive. -->
+<!-- TODO: reconvertir a selects y arreglar el responsive. -->
 <!-- TODO: hacer la sumatoria de score, revertir ultimo puntaje, y el fin de juego (reiniciar). -->
 <!-- TODO: Cunado eligen un participante ocupa el slot, y si ya estaba en otro slot se deja el slot limpio. -->
+<!-- TODO: contar cuantos partidos jugó cada jugador, rotar jugadores al finalizar con un algoritmo -->
 <ng-container *ngIf="game$ | async as game">
     <div class="game-title">
         <h1 class="game-h1">JUGANDO</h1>
         <!-- TODO: tres puntitos: reiniciar partido, ir al inicio, full width -->
     </div>
-    <div class="game-div">
-        <div class="game-participants">
-            <app-player
-                *ngFor="let player of game.participants"
-                class="participant"
-                [player]="player"
-                pDraggable="player"
-                (onDragStart)="dragStart(player)"
-                (onDragEnd)="dragEnd()">
-            </app-player>
+    <app-stadium class="stadium">
+        <div
+            class="stadium-score"
+            score-left>
+            SL
         </div>
-        <div class="game-runtime">
-            <div class="game-runtime-stadium">
-                <div class="stadium-team stadium-team-1">
-                    <div
-                        pDroppable="player"
-                        class="team-player"
-                        (onDrop)="drop(1, 1)">
-                        {{ game.team1.player1?.name || '1' }}
-                    </div>
-                    <div
-                        pDroppable="player"
-                        class="team-player"
-                        (onDrop)="drop(1, 2)">
-                        {{ game.team1.player2?.name || '2' }}
-                    </div>
-                </div>
-                <div class="stadium-team stadium-team-2">
-                    <div
-                        pDroppable="player"
-                        class="team-player"
-                        (onDrop)="drop(2, 1)">
-                        {{ game.team2.player1?.name || '3' }}
-                    </div>
-                    <div
-                        pDroppable="player"
-                        class="team-player"
-                        (onDrop)="drop(2, 2)">
-                        {{ game.team2.player2?.name || '4' }}
-                    </div>
-                </div>
-            </div>
-            <div class="game-runtime-score"></div>
+        <div
+            class="stadium-slot slot-left"
+            slot-0-0
+            (click)="openPlayerSelector(0, 0)">
+            <div
+                class="slot-background-color"
+                [ngStyle]="{ background: getPlayerAt(game, 0, 0)?.color || 'white' }"></div>
+            <i class="pi pi-user"></i>
+            <span class="slot-span">{{ getPlayerAt(game, 0, 0)?.name || '1' }}</span>
         </div>
-    </div>
+        <div
+            class="stadium-slot slot-left"
+            slot-0-1
+            (click)="openPlayerSelector(0, 1)">
+            <div
+                class="slot-background-color"
+                [ngStyle]="{ background: getPlayerAt(game, 0, 1)?.color || 'white' }"></div>
+            <i class="pi pi-user"></i>
+            <span class="slot-span">{{ getPlayerAt(game, 0, 1)?.name || '2' }}</span>
+        </div>
+        <div
+            class="stadium-slot slot-right"
+            slot-1-0
+            (click)="openPlayerSelector(1, 0)">
+            <div
+                class="slot-background-color"
+                [ngStyle]="{ background: getPlayerAt(game, 1, 0)?.color || 'white' }"></div>
+            <i class="pi pi-user"></i>
+            <span class="slot-span">{{ getPlayerAt(game, 1, 0)?.name || '3' }}</span>
+        </div>
+        <div
+            class="stadium-slot slot-right"
+            slot-1-1
+            (click)="openPlayerSelector(1, 1)">
+            <div
+                class="slot-background-color"
+                [ngStyle]="{ background: getPlayerAt(game, 1, 1)?.color || 'white' }"></div>
+            <i class="pi pi-user"></i>
+            <span class="slot-span">{{ getPlayerAt(game, 1, 1)?.name || '4' }}</span>
+        </div>
+        <div
+            class="stadium-score"
+            score-right>
+            SR
+        </div>
+    </app-stadium>
 </ng-container>

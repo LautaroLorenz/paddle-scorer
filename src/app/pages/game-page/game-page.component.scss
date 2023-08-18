@@ -7,7 +7,8 @@
 
     .game-title {
         display: flex;
-
+        background: #bed1eb;
+        
         .game-h1 {
             display: flex;
             width: 100%;
@@ -19,76 +20,49 @@
         }
     }
 
-    .game-div {
-        display: flex;
-        width: 100%;
-        flex: 1;
-        overflow: hidden;
-
-        .game-participants {
+    .stadium {
+        .stadium-slot {
             display: flex;
-            flex-direction: column;
-            height: 100%;
-            flex: 1 1 100%;
-            padding: 16px;
-            background-color: orange;
-            gap: 6px;
-            overflow: auto;
+            flex: 1;
+            margin: 16px;
+            border-radius: 4px;
+            border: 2px solid greenyellow;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 8px;
+            position: relative;
+            gap: 8px;
 
-            .participant {
-                background-color: aquamarine;
-            }
-        }
-
-        .game-runtime {
-            display: flex;
-            flex-direction: column;
-            flex: 1 1 100%;
-            background-color: blue;
-
-            .game-runtime-stadium {
-                display: flex;
-                flex: 1;
-                background-image: url('../../../assets/img/cancha-padel.jpg');
-                background-position: center center;
-                background-repeat: no-repeat;
-                background-size: contain;
-                width: 454px;
-                flex-wrap: wrap;
-                flex-direction: column;
-                gap: 32px;
-                padding: 32px;
-
-                .stadium-team {
-                    display: flex;
-                    height: 100%;
-                    flex-direction: column;
-                    align-items: stretch;
-                    justify-content: space-around;
-                    gap: 16px;
-
-                    .team-player {
-                        display: flex;
-                        flex-direction: row;
-                        border: 2px solid greenyellow;
-                        border-radius: 8px;
-                        color: rgb(153, 255, 0);
-                        font-size: 20px;
-                        line-height: 20px;
-                        background-color: rgba(250, 235, 215, 0.233);
-                        align-items: center;
-                        justify-content: center;
-                        flex: 1;
-                    }
-                }
+            &.slot-left {
+                margin-right: 42px;
             }
 
-            .game-runtime-score {
-                display: flex;
-                height: 64px;
-                background-color: aqua;
+            &.slot-right {
+                margin-left: 42px;
             }
 
+            .slot-background-color {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                opacity: 0.5;
+                z-index: 0;
+            }
+
+            i {
+                z-index: 1;
+            }
+
+            .slot-span {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                font-size: 2rem;
+                z-index: 1;
+            }
         }
     }
 }
