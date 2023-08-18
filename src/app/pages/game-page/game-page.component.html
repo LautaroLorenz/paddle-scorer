@@ -1,5 +1,6 @@
 <!-- TODO: hacer la sumatoria de score, revertir ultimo puntaje, y el fin de juego (reiniciar). -->
 <!-- TODO: contar cuantos partidos jugó cada jugador, rotar jugadores al finalizar con un algoritmo -->
+<!-- TODO: Rotar con el saque: podria haber un boton sobre el slot para elegir quien inicia el saque -->
 <ng-container *ngIf="game$ | async as game">
     <div class="game-title">
         <h1 class="game-h1">JUGANDO</h1>
@@ -60,6 +61,7 @@
     <p-dialog
         position="right"
         [modal]="true"
+        [dismissableMask]="true"
         [header]="playerSelectorHeader"
         [(visible)]="displayPlayerSelector">
         <p-listbox
