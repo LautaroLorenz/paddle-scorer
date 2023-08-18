@@ -36,17 +36,22 @@ export class GamePageComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.gameService.game$.pipe(takeUntil(this._onDestroy)).subscribe(({ isEndGame }) => {
+        this.gameService.game$.pipe(takeUntil(this._onDestroy)).subscribe(({ isEndGame, teams }) => {
             if (isEndGame !== false) {
                 const winnerTeamIndex = isEndGame;
                 this.confirmationService.confirm({
                     header: `¡¡¡ Ganador equipo ${winnerTeamIndex + 1} !!!`,
-                    message: 'Fin del juego',
+                    message: `Felicidades equipo ${winnerTeamIndex + 1}. Fin del juego`,
                     closeOnEscape: false,
                     acceptLabel: 'reiniciar',
                     rejectVisible: false,
                     accept: () => {
                         this.gameService.restartGame();
+                        // keep same players
+                        this.gameService.setGamePlayerAt(0, 0, teams[0].players[0]!);
+                        this.gameService.setGamePlayerAt(0, 1, teams[0].players[1]!);
+                        this.gameService.setGamePlayerAt(1, 0, teams[1].players[0]!);
+                        this.gameService.setGamePlayerAt(1, 1, teams[1].players[1]!);
                     }
                 });
             }
