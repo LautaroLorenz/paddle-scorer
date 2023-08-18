@@ -1,0 +1,49 @@
+:host {
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+
+        .players {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+
+            .players-div {
+                display: flex;
+                margin-bottom: 8px;
+                gap: 8px;
+            }
+
+            .player {
+                display: flex;
+                gap: 16px;
+            }
+        }
+
+        .score {
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            gap: 8px;
+
+            .score-points,
+            .score-sets {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+
+                ::ng-deep .p-inputnumber {
+                    width: 6rem;
+                }
+            }
+        }
+    }
+
+    .start-button {
+        margin: 32px 0px;
+    }
+}

@@ -1,0 +1,1 @@
+export type Point = 0 | 15 | 30 | 40;

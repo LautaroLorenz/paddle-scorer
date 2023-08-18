@@ -1,0 +1,77 @@
+<ng-container *ngIf="game$ | async as game">
+    <div class="game-title">
+        <h1 class="game-h1">JUGANDO</h1>
+        <button
+            type="button"
+            pButton
+            icon="pi pi-bars"
+            (click)="menu.toggle($event)"
+            class="p-button-text p-button-secondary"></button>
+        <p-menu
+            #menu
+            [popup]="true"
+            [model]="menuOptions"></p-menu>
+    </div>
+    <app-stadium
+        class="stadium"
+        [ngClass]="{
+            'score-animation': game.isGoldenPoint,
+            'player-animation': game.isGoldenSet,
+            'stadium-animation': game.isGoldenGame
+        }">
+        <app-score
+            class="stadium-score score-team-0"
+            score-team-0
+            [score]="getScoreAt(game, 0)"
+            [point]="game.points[0]"
+            (scoreClick)="incrementPointAt(game, 0)">
+        </app-score>
+        <app-player
+            slot-0-0
+            class="stadium-player player-team-0"
+            [player]="getPlayerAt(game, 0, 0)"
+            (playerClick)="openPlayerSelector(0, 0)">
+        </app-player>
+        <app-player
+            slot-0-1
+            class="stadium-player player-team-0"
+            [player]="getPlayerAt(game, 0, 1)"
+            (playerClick)="openPlayerSelector(0, 1)">
+        </app-player>
+        <app-player
+            slot-1-0
+            class="stadium-player player-team-1"
+            [player]="getPlayerAt(game, 1, 0)"
+            (playerClick)="openPlayerSelector(1, 0)">
+        </app-player>
+        <app-player
+            slot-1-1
+            class="stadium-player player-team-1"
+            [player]="getPlayerAt(game, 1, 1)"
+            (playerClick)="openPlayerSelector(1, 1)">
+        </app-player>
+        <app-score
+            class="stadium-score score-team-1"
+            score-team-1
+            [score]="getScoreAt(game, 1)"
+            [point]="game.points[1]"
+            (scoreClick)="incrementPointAt(game, 1)">
+        </app-score>
+    </app-stadium>
+    <p-dialog
+        position="right"
+        [modal]="true"
+        [dismissableMask]="true"
+        [header]="playerSelectorHeader"
+        [(visible)]="displayPlayerSelector">
+        <p-listbox
+            [options]="game.participants"
+            optionLabel="name"
+            optionValue="name"
+            (onClick)="playerSelectorClick($event)"></p-listbox>
+    </p-dialog>
+</ng-container>
+<p-confirmDialog
+    icon="pi pi-exclamation-triangle"
+    [closable]="false">
+</p-confirmDialog>
