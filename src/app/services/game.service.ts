@@ -89,6 +89,16 @@ export class GameService {
         this.game.next(newGameHistory[newGameHistory.length - 1]);
     }
 
+    restartGame(): void {
+        const gameHistory: Game[] = this.getGameHistoryFromStorage();
+        if(gameHistory.length === 1) {
+            return;
+        }
+        const newGameHistory = gameHistory.slice(0, 1);
+        localStorage.setItem('gameHistory', JSON.stringify(newGameHistory));
+        this.game.next(newGameHistory[newGameHistory.length - 1]);
+    }
+
     private saveGameOnStorage(gameStatus: Game, mode: 'append' | 'override'): void {
         let newGameHistory: Game[] = [];
         if (mode === 'override') {

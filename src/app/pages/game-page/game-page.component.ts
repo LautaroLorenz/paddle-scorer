@@ -59,8 +59,22 @@ export class GamePageComponent {
                     this.gameService.undoGameStatus();
                 }
             },
-            { label: 'Full screen', icon: 'pi pi-window-maximize' }, // TODO:
-            { label: 'reiniciar', icon: 'pi pi-refresh' }, // TODO:
+            // TODO: { label: 'Full screen', icon: 'pi pi-window-maximize' },
+            {
+                label: 'reiniciar',
+                icon: 'pi pi-refresh',
+                command: () => {
+                    this.confirmationService.confirm({
+                        header: 'Reiniciar',
+                        message: 'Volver a empezar todo el juego?',
+                        closeOnEscape: false,
+                        acceptLabel: 'Confirmar',
+                        accept: () => {
+                            this.gameService.restartGame();
+                        }
+                    });
+                }
+            },
             {
                 label: 'Ir al inicio',
                 icon: 'pi pi-home',
