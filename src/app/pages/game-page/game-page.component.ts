@@ -52,7 +52,13 @@ export class GamePageComponent {
     // TODO: Rotar con el saque: podria haber un boton sobre el slot para elegir quien inicia el saque
     private getMenuOptions(): MenuItem[] {
         return [
-            { label: 'deshacer cambio', icon: 'pi pi-undo' }, // TODO:
+            {
+                label: 'deshacer cambio',
+                icon: 'pi pi-undo',
+                command: () => {
+                    this.gameService.undoGameStatus();
+                }
+            },
             { label: 'Full screen', icon: 'pi pi-window-maximize' }, // TODO:
             { label: 'reiniciar', icon: 'pi pi-refresh' }, // TODO:
             {
