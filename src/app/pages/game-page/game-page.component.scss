@@ -1,0 +1,94 @@
+:host {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    flex-direction: column;
+
+    .game-title {
+        display: flex;
+
+        .game-h1 {
+            display: flex;
+            width: 100%;
+            flex: 1;
+            justify-content: center;
+            border-bottom: 1px solid rgb(124, 124, 124);
+            margin: 0;
+            padding: 16px 0;
+        }
+    }
+
+    .game-div {
+        display: flex;
+        width: 100%;
+        flex: 1;
+        overflow: hidden;
+
+        .game-participants {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex: 1 1 100%;
+            padding: 16px;
+            background-color: orange;
+            gap: 6px;
+            overflow: auto;
+
+            .participant {
+                background-color: aquamarine;
+            }
+        }
+
+        .game-runtime {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 100%;
+            background-color: blue;
+
+            .game-runtime-stadium {
+                display: flex;
+                flex: 1;
+                background-image: url('../../../assets/img/cancha-padel.jpg');
+                background-position: center center;
+                background-repeat: no-repeat;
+                background-size: contain;
+                width: 454px;
+                flex-wrap: wrap;
+                flex-direction: column;
+                gap: 32px;
+                padding: 32px;
+
+                .stadium-team {
+                    display: flex;
+                    height: 100%;
+                    flex-direction: column;
+                    align-items: stretch;
+                    justify-content: space-around;
+                    gap: 16px;
+
+                    .team-player {
+                        display: flex;
+                        flex-direction: row;
+                        border: 2px solid greenyellow;
+                        border-radius: 8px;
+                        color: rgb(153, 255, 0);
+                        font-size: 20px;
+                        line-height: 20px;
+                        background-color: rgba(250, 235, 215, 0.233);
+                        align-items: center;
+                        justify-content: center;
+                        flex: 1;
+                    }
+                }
+            }
+
+            .game-runtime-score {
+                display: flex;
+                height: 64px;
+                background-color: aqua;
+            }
+
+        }
+    }
+}
