@@ -4,29 +4,30 @@ import { Game } from '../models/game.model';
 import { Player, PlayerIndex } from '../models/player.model';
 import { Score } from '../models/score.model';
 import { Team, TeamIndex } from '../models/team.model';
-import { EndGame } from '../models/end-game.model';
+import { Router } from '@angular/router';
 
 @Injectable({
     providedIn: 'root'
 })
 export class GameService {
     private game = new ReplaySubject<Game>(1);
-    private endGame = new Subject<EndGame>();
+    private gameEnd = new Subject<Game>();
+    private initialStatus: Game | undefined;
 
-    constructor() {
-        this.loadGameFromStorage();
+    constructor(private router: Router) {
+        this.loadGameStatusFromStorage();
     }
 
     get game$(): Observable<Game> {
         return this.game.asObservable();
     }
 
-    get endGame$(): Observable<EndGame> {
-        return this.endGame.asObservable();
+    get gameEnd$(): Observable<Game> {
+        return this.gameEnd.asObservable();
     }
 
-    setGamePlayerAt(gameStatus: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex, player: Player): void {
-        const newGameStatus = { ...gameStatus };
+    setGamePlayerAt(teamIndex: TeamIndex, playerIndex: PlayerIndex, player: Player): void {
+        const newGameStatus = { ...this.getGameStatus() };
         for (let i = 0; i < newGameStatus.teams.length; i++) {
             const team = newGameStatus.teams[i];
             for (let f = 0; f < team.players.length; f++) {
@@ -37,11 +38,11 @@ export class GameService {
             }
         }
         newGameStatus.teams[teamIndex].players[playerIndex] = player;
-        this.saveGameOnStorage(newGameStatus, 'append');
+        this.saveGameStatusOnStorage(newGameStatus, 'append');
     }
 
     initGame(participants: Player[], goalScore: Score): void {
-        const game: Game = {
+        this.initialStatus = {
             participants,
             goalScore,
             isGoldenPoint: false,
@@ -62,13 +63,14 @@ export class GameService {
                         counter: 0
                     }
                 }
-            ]
+            ],
+            winnerTeamIndex: null
         };
-        this.saveGameOnStorage(game, 'override');
-        this.saveEndGameOnStorage(undefined, 'clear');
+        this.saveGameStatusOnStorage(this.initialStatus, 'override');
     }
 
-    incrementScoreAt(gameStatus: Game, teamIndexToIncrement: TeamIndex, mode: 'counter' | 'point' | 'set'): void {
+    incrementScoreAt(teamIndexToIncrement: TeamIndex, mode: 'counter' | 'point' | 'set'): void {
+        const gameStatus = this.getGameStatus();
         let winnerTeamIndex: TeamIndex | null = null;
         let newGameStatus: Game = { ...gameStatus };
         let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
@@ -87,7 +89,7 @@ export class GameService {
                         scoreToIncrement.counter = 40;
                         break;
                     case 40:
-                        return this.incrementScoreAt(gameStatus, teamIndexToIncrement, 'point');
+                        return this.incrementScoreAt(teamIndexToIncrement, 'point');
                 }
                 break;
             case 'point':
@@ -95,7 +97,7 @@ export class GameService {
                 newScores[1].counter = 0;
                 scoreToIncrement.points = scoreToIncrement.points + 1;
                 if (scoreToIncrement.points === gameStatus.goalScore.points) {
-                    return this.incrementScoreAt(gameStatus, teamIndexToIncrement, 'set');
+                    return this.incrementScoreAt(teamIndexToIncrement, 'set');
                 }
                 break;
             case 'set':
@@ -120,26 +122,23 @@ export class GameService {
                     ...newScores[index]
                 }
             })) as [Team, Team],
-            isGoldenPoint: this.isGoldenPoint(newGameStatus)
+            isGoldenPoint: this.isGoldenPoint(newGameStatus),
+            winnerTeamIndex
         };
-        this.saveGameOnStorage(newGameStatus, 'append');
+        this.saveGameStatusOnStorage(newGameStatus, 'append');
 
         if (winnerTeamIndex !== null) {
-            const newEndGame: EndGame = {
-                game: newGameStatus,
-                winnerTeamIndex
-            };
-            this.saveEndGameOnStorage(newEndGame, 'append');
+            this.gameEnd.next(newGameStatus);
         }
     }
 
     undoGameStatus(): void {
-        const gameHistory: Game[] = this.getGameHistoryFromStorage();
+        const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
         if (gameHistory.length === 1) {
             return;
         }
         const newGameHistory = gameHistory.slice(0, -1);
-        this.setGameHistory(newGameHistory);
+        this.setGameStatusHistory(newGameHistory);
     }
 
     restartScore(): void {
@@ -148,48 +147,43 @@ export class GameService {
             points: 0,
             sets: 0
         };
-        const newScores: [Score, Score] = [{ ...emptyScore }, { ...emptyScore }];
-        const gameHistory: Game[] = this.getGameHistoryFromStorage();
-        const lastGame = gameHistory[gameHistory.length - 1];
-        const newGameStatus = {
-            ...lastGame,
-            teams: lastGame.teams.map((team, index) => ({
+        const newEmptyScores: [Score, Score] = [{ ...emptyScore }, { ...emptyScore }];
+        const gameStatus = this.getGameStatus();
+        const newGameStatus: Game = {
+            ...gameStatus,
+            teams: gameStatus.teams.map((team, index) => ({
                 ...team,
-                score: {
-                    ...newScores[index]
-                }
-            })) as [Team, Team]
+                score: { ...newEmptyScores[index] }
+            })) as [Team, Team],
+            winnerTeamIndex: null
         };
-        this.saveGameOnStorage(newGameStatus, 'append');
+        this.saveGameStatusOnStorage(newGameStatus, 'append');
     }
 
-    setNextPlayers(gameStatus: Game): void {
-        const endGameHistory = this.getEndGameHistoryFromStorage();
-        const { game: lastGame } = endGameHistory.slice(-1)[0];
+    setNextPlayers(): void {
+        const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
+        const endGameHistory: Game[] = gameHistory.filter(({ winnerTeamIndex }) => winnerTeamIndex !== null);
+        const { participants } = endGameHistory.slice(-1)[0];
 
         const timesPlayedPerPlayer: Record<number, number> = {};
         const timesWinnedPerPlayer: Record<number, number> = {};
-        for (let index = 0; index < lastGame.participants.length; index++) {
-            const player = lastGame.participants[index];
+        for (let index = 0; index < participants.length; index++) {
+            const player = participants[index];
             timesPlayedPerPlayer[player.id] = endGameHistory.filter(
-                ({
-                    game: {
-                        teams: [team1, team2]
-                    }
-                }) =>
+                ({ teams: [team1, team2] }) =>
                     team1.players[0]?.id === player.id ||
                     team1.players[1]?.id === player.id ||
                     team2.players[0]?.id === player.id ||
                     team2.players[1]?.id === player.id
             ).length;
             timesWinnedPerPlayer[player.id] = endGameHistory.filter(
-                ({ game: { teams }, winnerTeamIndex }) =>
-                    teams[winnerTeamIndex].players[0]?.id === player.id ||
-                    teams[winnerTeamIndex].players[1]?.id === player.id
+                ({ teams, winnerTeamIndex }) =>
+                    teams[winnerTeamIndex!].players[0]?.id === player.id ||
+                    teams[winnerTeamIndex!].players[1]?.id === player.id
             ).length;
         }
 
-        const nextPlayers = lastGame.participants.sort((playerA, playerB) => {
+        const nextPlayers = participants.sort((playerA, playerB) => {
             // Prioridad para quien menos jugó
             if (timesPlayedPerPlayer[playerA.id] > timesPlayedPerPlayer[playerB.id]) {
                 return 1;
@@ -205,49 +199,50 @@ export class GameService {
             if (timesWinnedPerPlayer[playerA.id] > timesWinnedPerPlayer[playerB.id]) {
                 return -1;
             }
-
             return 0;
         });
 
-        if (nextPlayers[0]) {
-            this.setGamePlayerAt(gameStatus, 0, 0, nextPlayers[0]);
-        }
-
-        if (nextPlayers[1]) {
-            this.setGamePlayerAt(gameStatus, 0, 1, nextPlayers[1]);
-        }
-
-        if (nextPlayers[2]) {
-            this.setGamePlayerAt(gameStatus, 1, 0, nextPlayers[2]);
-        }
-
-        if (nextPlayers[3]) {
-            this.setGamePlayerAt(gameStatus, 1, 1, nextPlayers[3]);
-        }
+        nextPlayers[0] && this.setGamePlayerAt(0, 0, nextPlayers[0]);
+        nextPlayers[1] && this.setGamePlayerAt(0, 1, nextPlayers[1]);
+        nextPlayers[2] && this.setGamePlayerAt(1, 0, nextPlayers[2]);
+        nextPlayers[3] && this.setGamePlayerAt(1, 1, nextPlayers[3]);
     }
 
     private isGoldenPoint(game: Game): boolean {
         return game.teams[0].score.counter === 40 && game.teams[1].score.counter === 40;
     }
 
-    private saveGameOnStorage(gameStatus: Game, mode: 'append' | 'override'): void {
+    private getGameStatus(): Game {
+        const gameHistory = this.getGameStatusHistoryFromStorage();
+        const gameStatus = gameHistory.slice(-1)[0];
+        if (!gameStatus) {
+            if (this.initialStatus) {
+                return { ...this.initialStatus };
+            }
+            // estado no recuperable
+            this.router.navigate(['home']);
+        }
+        return gameStatus;
+    }
+
+    private saveGameStatusOnStorage(gameStatus: Game, mode: 'append' | 'override'): void {
         let newGameHistory: Game[] = [];
         if (mode === 'override') {
             newGameHistory = [gameStatus];
         }
         if (mode === 'append') {
-            const gameHistory: Game[] = this.getGameHistoryFromStorage();
+            const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
             newGameHistory = gameHistory.concat(gameStatus);
         }
-        this.setGameHistory(newGameHistory);
+        this.setGameStatusHistory(newGameHistory);
     }
 
-    private loadGameFromStorage(): void {
-        const gameHistory: Game[] = this.getGameHistoryFromStorage();
+    private loadGameStatusFromStorage(): void {
+        const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
         this.game.next(gameHistory[gameHistory.length - 1]);
     }
 
-    private getGameHistoryFromStorage(): Game[] {
+    private getGameStatusHistoryFromStorage(): Game[] {
         const history = localStorage.getItem('gameHistory');
         if (history) {
             return JSON.parse(history);
@@ -255,33 +250,8 @@ export class GameService {
         return [];
     }
 
-    private setGameHistory(gameHistory: Game[]): void {
+    private setGameStatusHistory(gameHistory: Game[]): void {
         localStorage.setItem('gameHistory', JSON.stringify(gameHistory));
         this.game.next(gameHistory[gameHistory.length - 1]);
-    }
-
-    private saveEndGameOnStorage(endGameStatus: EndGame | undefined, mode: 'append' | 'clear'): void {
-        let newEndGameHistory: EndGame[] = [];
-        if (mode === 'clear') {
-            newEndGameHistory = [];
-        }
-        if (mode === 'append' && endGameStatus) {
-            const endGameHistory: EndGame[] = this.getEndGameHistoryFromStorage();
-            newEndGameHistory = endGameHistory.concat(endGameStatus);
-        }
-        this.setEndGameHistory(newEndGameHistory);
-    }
-
-    private getEndGameHistoryFromStorage(): EndGame[] {
-        const history = localStorage.getItem('endGameHistory');
-        if (history) {
-            return JSON.parse(history);
-        }
-        return [];
-    }
-
-    private setEndGameHistory(endGameHistory: EndGame[]): void {
-        localStorage.setItem('endGameHistory', JSON.stringify(endGameHistory));
-        this.endGame.next(endGameHistory[endGameHistory.length - 1]);
     }
 }

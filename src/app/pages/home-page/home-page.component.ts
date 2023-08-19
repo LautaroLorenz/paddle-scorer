@@ -25,44 +25,44 @@ export class HomePageComponent implements OnInit {
         this.loadFormValue();
     }
 
-    get players(): FormArray {
-        return this.form.get('players') as FormArray;
+    get participants(): FormArray {
+        return this.form.get('participants') as FormArray;
     }
 
-    addPlayerControl(): void {
-        this.players.controls.push(
+    addParticipantControl(): void {
+        this.participants.controls.push(
             this.fb.group({
-                id: this.fb.control(this.players.controls.length, [Validators.required]),
+                id: this.fb.control(this.participants.controls.length, [Validators.required]),
                 name: this.fb.control('', [Validators.required]),
                 color: this.fb.control(getRandomBrightHexColor(), [Validators.required])
             })
         );
-        this.players.updateValueAndValidity();
+        this.participants.updateValueAndValidity();
     }
 
-    removePlayerControl(controlIndex: number): void {
-        this.players.removeAt(controlIndex);
-        this.players.updateValueAndValidity();
+    removeParticipantControl(controlIndex: number): void {
+        this.participants.removeAt(controlIndex);
+        this.participants.updateValueAndValidity();
     }
 
     refreshColors(): void {
-        for (let index = 0; index < this.players.controls.length; index++) {
-            const playerControl = this.players.controls[index];
-            playerControl.get('color')?.setValue(getRandomBrightHexColor());
+        for (let index = 0; index < this.participants.controls.length; index++) {
+            const participantControl = this.participants.controls[index];
+            participantControl.get('color')?.setValue(getRandomBrightHexColor());
         }
     }
 
     startGame(): void {
         this.saveFormValue();
-        const { players, score } = this.form.getRawValue();
-        this.gameService.initGame(players, score);
+        const { participants, goalScore } = this.form.getRawValue();
+        this.gameService.initGame(participants, goalScore);
         this.router.navigate(['game']);
     }
 
     private loadFormValue(): void {
-        const playersLength = localStorage.getItem('playersLength');
-        const savedValue = localStorage.getItem('value');
-        this.generateInitPlayers(playersLength ? +playersLength : this.INIT_PLAYERS);
+        const participantsLength = localStorage.getItem('participantsLength');
+        const savedValue = localStorage.getItem('settings');
+        this.generateParticipants(participantsLength ? +participantsLength : this.INIT_PLAYERS);
         if (savedValue) {
             const value = JSON.parse(savedValue);
             this.form.setValue(value);
@@ -70,14 +70,14 @@ export class HomePageComponent implements OnInit {
     }
 
     private saveFormValue(): void {
-        localStorage.setItem('playersLength', JSON.stringify(this.players.length));
-        localStorage.setItem('value', JSON.stringify(this.form.getRawValue()));
+        localStorage.setItem('participantsLength', JSON.stringify(this.participants.length));
+        localStorage.setItem('settings', JSON.stringify(this.form.getRawValue()));
     }
 
     private buildForm(): void {
         this.form = this.fb.group({
-            players: this.fb.array([]),
-            score: this.fb.group({
+            participants: this.fb.array([]),
+            goalScore: this.fb.group({
                 points: this.fb.control(6, [Validators.min(1), Validators.max(6)]),
                 sets: this.fb.control(3, [Validators.min(1), Validators.max(3)]),
                 counter: this.fb.control(0, [Validators.required])
@@ -85,9 +85,9 @@ export class HomePageComponent implements OnInit {
         });
     }
 
-    private generateInitPlayers(players: number): void {
-        for (let index = 0; index < players; index++) {
-            this.addPlayerControl();
+    private generateParticipants(participantsLength: number): void {
+        for (let index = 0; index < participantsLength; index++) {
+            this.addParticipantControl();
         }
     }
 }
