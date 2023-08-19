@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, Subject } from 'rxjs';
-import { Game } from '../models/game.model';
+import { DEFAULT_GAME, Game } from '../models/game.model';
 import { Player, PlayerIndex } from '../models/player.model';
-import { Score } from '../models/score.model';
-import { Team, TeamIndex } from '../models/team.model';
-import { Router } from '@angular/router';
+import { TeamIndex } from '../models/team.model';
+import { Snapshot } from '../core/snapshot.core';
+import { GoalScore } from '../models/goal-score.model';
 
 @Injectable({
     providedIn: 'root'
@@ -12,10 +12,10 @@ import { Router } from '@angular/router';
 export class GameService {
     private game = new ReplaySubject<Game>(1);
     private gameEnd = new Subject<Game>();
-    private initialStatus: Game | undefined;
+    private snapshot: Snapshot<Game>;
 
-    constructor(private router: Router) {
-        this.loadGameStatusFromStorage();
+    constructor() {
+        this.snapshot = new Snapshot();
     }
 
     get game$(): Observable<Game> {
@@ -26,164 +26,56 @@ export class GameService {
         return this.gameEnd.asObservable();
     }
 
-    setGamePlayerAt(teamIndex: TeamIndex, playerIndex: PlayerIndex, player: Player): void {
-        const newGameStatus = { ...this.getGameStatus() };
-        for (let i = 0; i < newGameStatus.teams.length; i++) {
-            const team = newGameStatus.teams[i];
-            for (let f = 0; f < team.players.length; f++) {
-                const splotPlayer = team.players[f];
-                if (splotPlayer?.id === player?.id) {
-                    team.players[f] = undefined;
+    initGame(): void {
+        const game: Game = { ...DEFAULT_GAME };
+        this.game.next(game);
+        this.snapshot.undoAll();
+        this.snapshot.generate(game);
+    }
+
+    setPlayerAt(teamIndexToSet: TeamIndex, playerIndexToSet: PlayerIndex, playerToSet: Player): void {
+        const gameSnapshot: Game | null = this.snapshot.get();
+        if (!gameSnapshot) {
+            return;
+        }
+
+        const gameCopy = this.copy(gameSnapshot);
+        for (let teamIndex = 0; teamIndex < gameCopy.teams.length; teamIndex++) {
+            const team = gameCopy.teams[teamIndex];
+            for (let playerIndex = 0; playerIndex < team.players.length; playerIndex++) {
+                const player = team.players[playerIndex];
+                if (player && player.id === playerToSet.id) {
+                    gameCopy.teams[teamIndex].players[playerIndex] = undefined;
                 }
             }
         }
-        newGameStatus.teams[teamIndex].players[playerIndex] = player;
-        this.saveGameStatusOnStorage(newGameStatus, 'append');
+        gameCopy.teams[teamIndexToSet].players[playerIndexToSet] = playerToSet;
+        this.game.next(gameCopy);
+        this.snapshot.generate(gameCopy);
     }
 
-    initGame(participants: Player[], goalScore: Score): void {
-        this.initialStatus = {
-            participants,
-            goalScore,
-            isGoldenPoint: false,
-            teams: [
-                {
-                    players: [participants[0] ?? undefined, participants[1] ?? undefined],
-                    score: {
-                        points: 0,
-                        sets: 0,
-                        counter: 0
-                    }
-                },
-                {
-                    players: [participants[2] ?? undefined, participants[3] ?? undefined],
-                    score: {
-                        points: 0,
-                        sets: 0,
-                        counter: 0
-                    }
-                }
-            ],
-            winnerTeamIndex: null
-        };
-        this.saveGameStatusOnStorage(this.initialStatus, 'override');
-    }
-
-    incrementScoreAt(teamIndexToIncrement: TeamIndex, mode: 'counter' | 'point' | 'set'): void {
-        const gameStatus = this.getGameStatus();
-        let winnerTeamIndex: TeamIndex | null = null;
-        let newGameStatus: Game = { ...gameStatus };
-        let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
-        const scoreToIncrement = newScores[teamIndexToIncrement];
-
-        switch (mode) {
-            case 'counter':
-                switch (scoreToIncrement.counter) {
-                    case 0:
-                        scoreToIncrement.counter = 15;
-                        break;
-                    case 15:
-                        scoreToIncrement.counter = 30;
-                        break;
-                    case 30:
-                        scoreToIncrement.counter = 40;
-                        break;
-                    case 40:
-                        return this.incrementScoreAt(teamIndexToIncrement, 'point');
-                }
-                break;
-            case 'point':
-                newScores[0].counter = 0;
-                newScores[1].counter = 0;
-                scoreToIncrement.points = scoreToIncrement.points + 1;
-                if (scoreToIncrement.points === gameStatus.goalScore.points) {
-                    return this.incrementScoreAt(teamIndexToIncrement, 'set');
-                }
-                break;
-            case 'set':
-                newScores[0].counter = 0;
-                newScores[1].counter = 0;
-                newScores[0].points = 0;
-                newScores[1].points = 0;
-                scoreToIncrement.sets = scoreToIncrement.sets + 1;
-                if (scoreToIncrement.sets === gameStatus.goalScore.sets) {
-                    newScores[0].sets = 0;
-                    newScores[1].sets = 0;
-                    winnerTeamIndex = teamIndexToIncrement;
-                }
-                break;
-        }
-
-        newGameStatus = {
-            ...newGameStatus,
-            teams: newGameStatus.teams.map((team, index) => ({
-                ...team,
-                score: {
-                    ...newScores[index]
-                }
-            })) as [Team, Team],
-            isGoldenPoint: this.isGoldenPoint(newGameStatus),
-            winnerTeamIndex
-        };
-        this.saveGameStatusOnStorage(newGameStatus, 'append');
-
-        if (winnerTeamIndex !== null) {
-            this.gameEnd.next(newGameStatus);
-        }
-    }
-
-    undoGameStatus(): void {
-        const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
-        if (gameHistory.length === 1) {
-            return;
-        }
-        const newGameHistory = gameHistory.slice(0, -1);
-        this.setGameStatusHistory(newGameHistory);
-    }
-
-    restartScore(): void {
-        const emptyScore: Score = {
-            counter: 0,
-            points: 0,
-            sets: 0
-        };
-        const newEmptyScores: [Score, Score] = [{ ...emptyScore }, { ...emptyScore }];
-        const gameStatus = this.getGameStatus();
-        const newGameStatus: Game = {
-            ...gameStatus,
-            teams: gameStatus.teams.map((team, index) => ({
-                ...team,
-                score: { ...newEmptyScores[index] }
-            })) as [Team, Team],
-            winnerTeamIndex: null
-        };
-        this.saveGameStatusOnStorage(newGameStatus, 'append');
-    }
-
-    setNextPlayers(): void {
-        const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
-        const endGameHistory: Game[] = gameHistory.filter(({ winnerTeamIndex }) => winnerTeamIndex !== null);
-        const { participants } = endGameHistory.slice(-1)[0];
-
+    setPlayers(participants: Player[]): void {
+        const endGames: Game[] = this.snapshot.history.filter(({ winnerTeamIndex }) => winnerTeamIndex !== null);
         const timesPlayedPerPlayer: Record<number, number> = {};
         const timesWinnedPerPlayer: Record<number, number> = {};
         for (let index = 0; index < participants.length; index++) {
             const player = participants[index];
-            timesPlayedPerPlayer[player.id] = endGameHistory.filter(
+            timesPlayedPerPlayer[player.id] = endGames.filter(
                 ({ teams: [team1, team2] }) =>
                     team1.players[0]?.id === player.id ||
                     team1.players[1]?.id === player.id ||
                     team2.players[0]?.id === player.id ||
                     team2.players[1]?.id === player.id
             ).length;
-            timesWinnedPerPlayer[player.id] = endGameHistory.filter(
+            timesWinnedPerPlayer[player.id] = endGames.filter(
                 ({ teams, winnerTeamIndex }) =>
                     teams[winnerTeamIndex!].players[0]?.id === player.id ||
                     teams[winnerTeamIndex!].players[1]?.id === player.id
             ).length;
         }
 
-        const nextPlayers = participants.sort((playerA, playerB) => {
+        const participantsCopy: Player[] = [...participants];
+        const nextPlayers = participantsCopy.sort((playerA, playerB) => {
             // Prioridad para quien menos jugó
             if (timesPlayedPerPlayer[playerA.id] > timesPlayedPerPlayer[playerB.id]) {
                 return 1;
@@ -199,59 +91,143 @@ export class GameService {
             if (timesWinnedPerPlayer[playerA.id] > timesWinnedPerPlayer[playerB.id]) {
                 return -1;
             }
+
             return 0;
         });
 
-        nextPlayers[0] && this.setGamePlayerAt(0, 0, nextPlayers[0]);
-        nextPlayers[1] && this.setGamePlayerAt(0, 1, nextPlayers[1]);
-        nextPlayers[2] && this.setGamePlayerAt(1, 0, nextPlayers[2]);
-        nextPlayers[3] && this.setGamePlayerAt(1, 1, nextPlayers[3]);
+        nextPlayers[0] && this.setPlayerAt(0, 0, nextPlayers[0]);
+        nextPlayers[1] && this.setPlayerAt(0, 1, nextPlayers[1]);
+        nextPlayers[2] && this.setPlayerAt(1, 0, nextPlayers[2]);
+        nextPlayers[3] && this.setPlayerAt(1, 1, nextPlayers[3]);
+    }
+
+    incrementScoreAt(goalScore: GoalScore, teamIndexToIncrement: TeamIndex, mode: 'counter' | 'point' | 'set'): void {
+        const gameSnapshot = this.snapshot.get();
+        if (!gameSnapshot) {
+            return;
+        }
+
+        const gameCopy = this.copy(gameSnapshot);
+        gameCopy.winnerTeamIndex = null;
+        switch (mode) {
+            case 'counter':
+                switch (gameCopy.teams[teamIndexToIncrement].score.counter) {
+                    case 0:
+                        gameCopy.teams[teamIndexToIncrement].score.counter = 15;
+                        break;
+                    case 15:
+                        gameCopy.teams[teamIndexToIncrement].score.counter = 30;
+                        break;
+                    case 30:
+                        gameCopy.teams[teamIndexToIncrement].score.counter = 40;
+                        break;
+                    case 40:
+                        return this.incrementScoreAt(goalScore, teamIndexToIncrement, 'point');
+                }
+                break;
+            case 'point':
+                gameCopy.teams[0].score.counter = 0;
+                gameCopy.teams[1].score.counter = 0;
+                gameCopy.teams[teamIndexToIncrement].score.points =
+                    gameCopy.teams[teamIndexToIncrement].score.points + 1;
+                if (gameCopy.teams[teamIndexToIncrement].score.points === goalScore.points) {
+                    return this.incrementScoreAt(goalScore, teamIndexToIncrement, 'set');
+                }
+                break;
+            case 'set':
+                gameCopy.teams[0].score.counter = 0;
+                gameCopy.teams[1].score.counter = 0;
+                gameCopy.teams[0].score.points = 0;
+                gameCopy.teams[1].score.points = 0;
+                gameCopy.teams[teamIndexToIncrement].score.sets = gameCopy.teams[teamIndexToIncrement].score.sets + 1;
+                if (gameCopy.teams[teamIndexToIncrement].score.sets === goalScore.sets) {
+                    gameCopy.teams[0].score.sets = 0;
+                    gameCopy.teams[1].score.sets = 0;
+                    gameCopy.winnerTeamIndex = teamIndexToIncrement;
+                }
+                break;
+        }
+
+        gameCopy.isGoldenPoint = this.isGoldenPoint(gameCopy);
+        this.game.next(gameCopy);
+        this.snapshot.generate(gameCopy);
+        if (gameCopy.winnerTeamIndex !== null) {
+            this.gameEnd.next(gameCopy);
+        }
+    }
+
+    undo(): void {
+        const gameSnapshot: Game | null = this.snapshot.undo();
+        if (!gameSnapshot) {
+            return;
+        }
+        this.game.next(gameSnapshot);
+    }
+
+    restartScore(): void {
+        const gameSnapshot = this.snapshot.get();
+        if (!gameSnapshot) {
+            return;
+        }
+
+        const gameCopy = this.copy(gameSnapshot);
+        gameCopy.winnerTeamIndex = null;
+        gameCopy.teams[0].score.counter = 0;
+        gameCopy.teams[0].score.sets = 0;
+        gameCopy.teams[0].score.points = 0;
+        gameCopy.teams[1].score.counter = 0;
+        gameCopy.teams[1].score.sets = 0;
+        gameCopy.teams[1].score.points = 0;
+        this.game.next(gameCopy);
+        this.snapshot.generate(gameCopy);
     }
 
     private isGoldenPoint(game: Game): boolean {
         return game.teams[0].score.counter === 40 && game.teams[1].score.counter === 40;
     }
 
-    private getGameStatus(): Game {
-        const gameHistory = this.getGameStatusHistoryFromStorage();
-        const gameStatus = gameHistory.slice(-1)[0];
-        if (!gameStatus) {
-            if (this.initialStatus) {
-                return { ...this.initialStatus };
-            }
-            // estado no recuperable
-            this.router.navigate(['home']);
-        }
-        return gameStatus;
+    private copy(game: Game): Game {
+        const {
+            isGoldenPoint,
+            winnerTeamIndex,
+            teams: [team1, team2]
+        } = game;
+        const { score: score1, players: players1 } = team1;
+        const { score: score2, players: players2 } = team2;
+
+        return {
+            isGoldenPoint: isGoldenPoint,
+            winnerTeamIndex: winnerTeamIndex,
+            teams: [
+                {
+                    score: {
+                        counter: score1.counter,
+                        points: score1.points,
+                        sets: score1.sets
+                    },
+                    players: [this.copyPlayer(players1[0]), this.copyPlayer(players1[1])]
+                },
+                {
+                    score: {
+                        counter: score2.counter,
+                        points: score2.points,
+                        sets: score2.sets
+                    },
+                    players: [this.copyPlayer(players2[0]), this.copyPlayer(players2[1])]
+                }
+            ]
+        };
     }
 
-    private saveGameStatusOnStorage(gameStatus: Game, mode: 'append' | 'override'): void {
-        let newGameHistory: Game[] = [];
-        if (mode === 'override') {
-            newGameHistory = [gameStatus];
+    private copyPlayer(player: Player | undefined): Player | undefined {
+        if (player === undefined) {
+            return undefined;
         }
-        if (mode === 'append') {
-            const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
-            newGameHistory = gameHistory.concat(gameStatus);
-        }
-        this.setGameStatusHistory(newGameHistory);
-    }
 
-    private loadGameStatusFromStorage(): void {
-        const gameHistory: Game[] = this.getGameStatusHistoryFromStorage();
-        this.game.next(gameHistory[gameHistory.length - 1]);
-    }
-
-    private getGameStatusHistoryFromStorage(): Game[] {
-        const history = localStorage.getItem('gameHistory');
-        if (history) {
-            return JSON.parse(history);
-        }
-        return [];
-    }
-
-    private setGameStatusHistory(gameHistory: Game[]): void {
-        localStorage.setItem('gameHistory', JSON.stringify(gameHistory));
-        this.game.next(gameHistory[gameHistory.length - 1]);
+        return {
+            id: player.id,
+            color: player.color,
+            name: player.name
+        };
     }
 }
