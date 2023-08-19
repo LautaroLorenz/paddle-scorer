@@ -1,0 +1,1 @@
+export type Counter = 0 | 15 | 30 | 40;

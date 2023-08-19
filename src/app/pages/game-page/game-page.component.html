@@ -14,17 +14,12 @@
     </div>
     <app-stadium
         class="stadium"
-        [ngClass]="{
-            'score-animation': game.isGoldenPoint,
-            'player-animation': game.isGoldenSet,
-            'stadium-animation': game.isGoldenGame
-        }">
+        [ngClass]="{ 'stadium-animation': game.isGoldenPoint }">
         <app-score
             class="stadium-score score-team-0"
             score-team-0
             [score]="getScoreAt(game, 0)"
-            [point]="game.points[0]"
-            (scoreClick)="incrementPointAt(game, 0)">
+            (counterClick)="incrementCounterAt(game, 0)">
         </app-score>
         <app-player
             slot-0-0
@@ -54,8 +49,7 @@
             class="stadium-score score-team-1"
             score-team-1
             [score]="getScoreAt(game, 1)"
-            [point]="game.points[1]"
-            (scoreClick)="incrementPointAt(game, 1)">
+            (counterClick)="incrementCounterAt(game, 1)">
         </app-score>
     </app-stadium>
     <p-dialog
@@ -68,7 +62,7 @@
             [options]="game.participants"
             optionLabel="name"
             optionValue="name"
-            (onClick)="playerSelectorClick($event)"></p-listbox>
+            (onClick)="playerSelectorClick($event, game)"></p-listbox>
     </p-dialog>
 </ng-container>
 <p-confirmDialog

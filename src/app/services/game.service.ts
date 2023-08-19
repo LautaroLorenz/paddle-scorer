@@ -1,43 +1,17 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
 import { Game } from '../models/game.model';
 import { Player, PlayerIndex } from '../models/player.model';
 import { Score } from '../models/score.model';
 import { Team, TeamIndex } from '../models/team.model';
-import { Point } from '../models/point.model';
+import { EndGame } from '../models/end-game.model';
 
 @Injectable({
     providedIn: 'root'
 })
 export class GameService {
-    private game = new BehaviorSubject<Game>({
-        score: {
-            points: 6,
-            sets: 3
-        },
-        participants: [],
-        teams: [
-            {
-                players: [undefined, undefined],
-                score: {
-                    points: 0,
-                    sets: 0
-                }
-            },
-            {
-                players: [undefined, undefined],
-                score: {
-                    points: 0,
-                    sets: 0
-                }
-            }
-        ],
-        points: [0, 0],
-        isGoldenPoint: false,
-        isGoldenSet: false,
-        isGoldenGame: false,
-        isEndGame: false
-    });
+    private game = new ReplaySubject<Game>(1);
+    private _isEndGame = new ReplaySubject<EndGame>(1);
 
     constructor() {
         this.loadGameFromStorage();
@@ -47,92 +21,154 @@ export class GameService {
         return this.game.asObservable();
     }
 
-    setGamePlayerAt(teamIndex: TeamIndex, playerIndex: PlayerIndex, player: Player): void {
-        const game: Game = this.game.value;
-        for (let i = 0; i < game.teams.length; i++) {
-            const team = game.teams[i];
+    get isEndGame$(): Observable<EndGame> {
+        return this._isEndGame.asObservable();
+    }
+
+    setGamePlayerAt(gameStatus: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex, player: Player): void {
+        const newGameStatus = { ...gameStatus };
+        for (let i = 0; i < newGameStatus.teams.length; i++) {
+            const team = newGameStatus.teams[i];
             for (let f = 0; f < team.players.length; f++) {
                 const splotPlayer = team.players[f];
-                if (splotPlayer?.name === player?.name && splotPlayer?.color === player?.color) {
+                if (splotPlayer?.id === player?.id) {
                     team.players[f] = undefined;
                 }
             }
         }
-        game.teams[teamIndex].players[playerIndex] = player;
-        this.saveGameOnStorage(game, 'append');
+        newGameStatus.teams[teamIndex].players[playerIndex] = player;
+        this.saveGameOnStorage(newGameStatus, 'append');
     }
 
-    initGame(participants: Player[], score: Score): void {
+    initGame(participants: Player[], goalScore: Score): void {
         const game: Game = {
-            score,
             participants,
+            goalScore,
+            isGoldenPoint: false,
             teams: [
                 {
                     players: [undefined, undefined],
                     score: {
                         points: 0,
-                        sets: 0
+                        sets: 0,
+                        counter: 0
                     }
                 },
                 {
                     players: [undefined, undefined],
                     score: {
                         points: 0,
-                        sets: 0
+                        sets: 0,
+                        counter: 0
                     }
                 }
-            ],
-            points: [0, 0],
-            isGoldenPoint: false,
-            isGoldenSet: false,
-            isGoldenGame: false,
-            isEndGame: false
+            ]
         };
         this.saveGameOnStorage(game, 'override');
     }
 
-    incrementPointAt(gameStatus: Game, teamIndex: TeamIndex): void {
-        const { points } = gameStatus;
-        const newPoints: [Point, Point] = [points[0], points[1]];
-        const otherTeamIndex = teamIndex === 0 ? 1 : 0;
-        let { score: newScoreTeamIndex } = gameStatus.teams[teamIndex];
-        let { score: newScoreOtherTeamIndex } = gameStatus.teams[otherTeamIndex];
-        switch (points[teamIndex]) {
+    incrementCounterAt(gameStatus: Game, teamIndexToIncrement: TeamIndex): void {
+        let isPoint = false;
+        let newGameStatus: Game = { ...gameStatus };
+        let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
+
+        switch (newScores[teamIndexToIncrement].counter) {
             case 0:
-                newPoints[teamIndex] = 15;
+                newScores[teamIndexToIncrement].counter = 15;
                 break;
             case 15:
-                newPoints[teamIndex] = 30;
+                newScores[teamIndexToIncrement].counter = 30;
                 break;
             case 30:
-                newPoints[teamIndex] = 40;
+                newScores[teamIndexToIncrement].counter = 40;
                 break;
             case 40:
-                newPoints[teamIndex] = 0;
-                newPoints[otherTeamIndex] = 0;
-                newScoreTeamIndex.points = newScoreTeamIndex.points + 1;
-                if (newScoreTeamIndex.points === gameStatus.score.points) {
-                    newScoreTeamIndex = {
-                        ...newScoreTeamIndex,
-                        sets: newScoreTeamIndex.sets + 1
-                    };
-                    newScoreTeamIndex.points = 0;
-                    newScoreOtherTeamIndex = {
-                        ...newScoreOtherTeamIndex,
-                        points: 0
-                    };
-                }
+                newScores[0].counter = 0;
+                newScores[1].counter = 0;
+                isPoint = true;
                 break;
         }
-        gameStatus.teams[teamIndex].score = newScoreTeamIndex;
-        gameStatus.teams[otherTeamIndex].score = newScoreOtherTeamIndex;
-        gameStatus.points = newPoints;
-        gameStatus.isGoldenPoint = this.isGoldenPoint(gameStatus);
-        gameStatus.isGoldenSet = this.isGoldenSet(gameStatus);
-        gameStatus.isGoldenGame = this.isGoldenGame(gameStatus);
-        gameStatus.isEndGame = this.isEndGame(gameStatus);
-        this.saveGameOnStorage(gameStatus, 'append');
+        newGameStatus = {
+            ...newGameStatus,
+            teams: newGameStatus.teams.map((team, index) => ({
+                ...team,
+                score: {
+                    ...newScores[index]
+                }
+            })) as [Team, Team],
+            isGoldenPoint: this.isGoldenPoint(newGameStatus)
+        };
+        if (isPoint) {
+            this.incrementPointAt(newGameStatus, teamIndexToIncrement);
+        } else {
+            this.saveGameOnStorage(newGameStatus, 'append');
+        }
     }
+
+    incrementPointAt(gameStatus: Game, teamIndexToIncrement: TeamIndex): void {
+        let isSet = false;
+        let newGameStatus: Game = { ...gameStatus };
+        let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
+
+        newScores[0].counter = 0;
+        newScores[1].counter = 0;
+        newScores[teamIndexToIncrement].points = newScores[teamIndexToIncrement].points + 1;
+        if (newScores[teamIndexToIncrement].points === gameStatus.goalScore.points) {
+            newScores[0].points = 0;
+            newScores[1].points = 0;
+            isSet = true;
+        }
+        newGameStatus = {
+            ...newGameStatus,
+            teams: newGameStatus.teams.map((team, index) => ({
+                ...team,
+                score: {
+                    ...newScores[index]
+                }
+            })) as [Team, Team]
+        };
+        if (isSet) {
+            this.incrementSetAt(newGameStatus, teamIndexToIncrement);
+        } else {
+            this.saveGameOnStorage(newGameStatus, 'append');
+        }
+    }
+
+    incrementSetAt(gameStatus: Game, teamIndexToIncrement: TeamIndex): void {
+        let winnerTeamIndex: TeamIndex | null = null;
+        let newGameStatus: Game = { ...gameStatus };
+        let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
+
+        newScores[0].counter = 0;
+        newScores[1].counter = 0;
+        newScores[0].points = 0;
+        newScores[1].points = 0;
+        newScores[teamIndexToIncrement].sets = newScores[teamIndexToIncrement].sets + 1;
+        if (newScores[teamIndexToIncrement].sets === gameStatus.goalScore.sets) {
+            newScores[0].sets = 0;
+            newScores[1].sets = 0;
+            winnerTeamIndex = teamIndexToIncrement;
+        }
+        newGameStatus = {
+            ...newGameStatus,
+            teams: newGameStatus.teams.map((team, index) => ({
+                ...team,
+                score: {
+                    ...newScores[index]
+                }
+            })) as [Team, Team]
+        };
+        if (winnerTeamIndex !== null) {
+            // TODO: const gameHistory = this.getGameHistoryFromStorage();
+            this._isEndGame.next({
+                game: newGameStatus,
+                winnerTeamIndex
+                // ODO:  nextPlayers: this.calculateNextPlayers(gameHistory),
+            });
+        }
+        this.saveGameOnStorage(newGameStatus, 'append');
+    }
+
     undoGameStatus(): void {
         const gameHistory: Game[] = this.getGameHistoryFromStorage();
         if (gameHistory.length === 1) {
@@ -151,38 +187,14 @@ export class GameService {
         this.setGameHistory(newGameHistory);
     }
 
-    private isEndGame(game: Game): TeamIndex | false {
-        if (this.isTeamWinner(game.score, game.teams[0])) {
-            return 0;
-        }
-        if (this.isTeamWinner(game.score, game.teams[1])) {
-            return 1;
-        }
-        return false;
-    }
+    // TODO:
+    // private calculateNextPlayers(gameHistory: Game[]): [Player, Player, Player, Player] {
+    //     const lastGame = gameHistory.slice(-1)[0];
+    //     const participants = lastGame.participants;
+    // }
 
     private isGoldenPoint(game: Game): boolean {
-        return game.points[0] === 40 && game.points[1] === 40;
-    }
-
-    private isGoldenSet(game: Game): boolean {
-        return (
-            this.isGoldenPoint(game) &&
-            game.teams[0].score.points + 1 === game.score.points &&
-            game.teams[1].score.points + 1 === game.score.points
-        );
-    }
-
-    private isGoldenGame(game: Game): boolean {
-        return (
-            this.isGoldenSet(game) &&
-            game.teams[0].score.sets + 1 === game.score.sets &&
-            game.teams[1].score.sets + 1 === game.score.sets
-        );
-    }
-
-    private isTeamWinner(gameScore: Score, team: Team): boolean {
-        return team.score.sets === gameScore.sets;
+        return game.teams[0].score.counter === 40 && game.teams[1].score.counter === 40;
     }
 
     private saveGameOnStorage(gameStatus: Game, mode: 'append' | 'override'): void {
