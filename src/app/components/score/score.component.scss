@@ -3,8 +3,8 @@
     flex: 1;
     flex-direction: column;
     gap: 16px;
-    
-    .score-button {
+
+    .score-counter {
         display: flex;
         flex: 1;
 
@@ -15,7 +15,8 @@
         }
     }
 
-    .score-sets {
+    .score-sets,
+    .score-points {
         display: flex;
         justify-content: space-between;
         background-color: rgb(253, 244, 205);

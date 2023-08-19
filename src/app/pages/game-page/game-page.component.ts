@@ -36,25 +36,31 @@ export class GamePageComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.gameService.game$.pipe(takeUntil(this._onDestroy)).subscribe(({ isEndGame, teams }) => {
-            if (isEndGame !== false) {
-                const winnerTeamIndex = isEndGame;
-                this.confirmationService.confirm({
-                    header: `¡¡¡ Ganador equipo ${winnerTeamIndex + 1} !!!`,
-                    message: `Felicidades equipo ${winnerTeamIndex + 1}. Fin del juego`,
-                    closeOnEscape: false,
-                    acceptLabel: 'reiniciar',
-                    rejectVisible: false,
-                    accept: () => {
-                        this.gameService.restartGame();
-                        // keep same players
-                        this.gameService.setGamePlayerAt(0, 0, teams[0].players[0]!);
-                        this.gameService.setGamePlayerAt(0, 1, teams[0].players[1]!);
-                        this.gameService.setGamePlayerAt(1, 0, teams[1].players[0]!);
-                        this.gameService.setGamePlayerAt(1, 1, teams[1].players[1]!);
-                    }
-                });
+        this.gameService.endGame$.pipe(takeUntil(this._onDestroy)).subscribe((endGame) => {
+            const { game, winnerTeamIndex } = endGame;
+            const { teams } = game;
+            const winnerTeamNumber = winnerTeamIndex! + 1;
+            const winnerPlayer1 = teams[winnerTeamIndex!].players[0];
+            const winnerPlayer2 = teams[winnerTeamIndex!].players[1];
+            const victoryHeader = `¡¡¡ Felicidades al equipo ${winnerTeamNumber} por la victoria !!!`;
+            let victoryMessage;
+            if (winnerPlayer1 && winnerPlayer2) {
+                victoryMessage = `Excelente victoria ${winnerPlayer1.name} y ${winnerPlayer2.name}, sigan jugando así.`;
+            } else {
+                victoryMessage = `¡ Hey, Jugaron muy bien !`;
             }
+            this.confirmationService.confirm({
+                header: victoryHeader,
+                message: victoryMessage,
+                icon: 'pi pi-heart-fill',
+                acceptLabel: 'Reiniciar',
+                rejectVisible: false,
+                accept: () => {
+                    this.gameService.restartScore();
+                    this.gameService.setNextPlayers(game);
+                },
+                closeOnEscape: false
+            });
         });
     }
 
@@ -73,15 +79,15 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.displayPlayerSelector = true;
     }
 
-    playerSelectorClick({ option }: { option: Player }): void {
+    playerSelectorClick({ option }: { option: Player }, game: Game): void {
         this.displayPlayerSelector = false;
-        this.gameService.setGamePlayerAt(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
+        this.gameService.setGamePlayerAt(game, this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
         this.playerSelectorTeamIndex = null;
         this.playerSelectorPlayerIndex = null;
     }
 
-    incrementPointAt(game: Game, teamIndex: TeamIndex): void {
-        this.gameService.incrementPointAt(game, teamIndex);
+    incrementCounterAt(game: Game, teamIndex: TeamIndex): void {
+        this.gameService.incrementCounterAt(game, teamIndex);
     }
 
     ngOnDestroy(): void {
@@ -89,7 +95,6 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this._onDestroy.complete();
     }
 
-    // TODO: contar cuantos partidos jugó cada jugador, rotar jugadores al finalizar con un algoritmo
     // TODO: Rotar con el saque: podria haber un boton sobre el slot para elegir quien inicia el saque
     // TODO: detectar portrait y landscape
     private getMenuOptions(): MenuItem[] {
@@ -116,16 +121,16 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 }
             },
             {
-                label: 'reiniciar',
+                label: 'reiniciar score',
                 icon: 'pi pi-refresh',
                 command: () => {
                     this.confirmationService.confirm({
-                        header: 'Reiniciar',
-                        message: 'Volver a empezar todo el juego?',
+                        header: 'Reiniciar score',
+                        message: 'Volver a empezar los contadores?',
                         closeOnEscape: false,
                         acceptLabel: 'Confirmar',
                         accept: () => {
-                            this.gameService.restartGame();
+                            this.gameService.restartScore();
                         }
                     });
                 }

@@ -32,6 +32,7 @@ export class HomePageComponent implements OnInit {
     addPlayerControl(): void {
         this.players.controls.push(
             this.fb.group({
+                id: this.fb.control(this.players.controls.length, [Validators.required]),
                 name: this.fb.control('', [Validators.required]),
                 color: this.fb.control(getRandomBrightHexColor(), [Validators.required])
             })
@@ -78,7 +79,8 @@ export class HomePageComponent implements OnInit {
             players: this.fb.array([]),
             score: this.fb.group({
                 points: this.fb.control(6, [Validators.min(1), Validators.max(6)]),
-                sets: this.fb.control(3, [Validators.min(1), Validators.max(3)])
+                sets: this.fb.control(3, [Validators.min(1), Validators.max(3)]),
+                counter: this.fb.control(0, [Validators.required])
             })
         });
     }
