@@ -1,0 +1,27 @@
+:host {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 16px;
+
+    .score-counter {
+        display: flex;
+        flex: 1;
+
+        ::ng-deep button {
+            display: flex;
+            flex: 1;
+            font-size: 1.5rem;
+        }
+    }
+
+    .score-sets,
+    .score-points {
+        display: flex;
+        justify-content: space-between;
+        background-color: rgb(253, 244, 205);
+        border-radius: 4px;
+        padding: 4px 8px;
+        align-items: center;
+    }
+}

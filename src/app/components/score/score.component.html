@@ -1,0 +1,13 @@
+<div class="score-sets">
+    <span>Set</span>
+    <span>{{ score.sets }}</span>
+</div>
+<div class="score-points">
+    <span>Point</span>
+    <span>{{ score.points }}</span>
+</div>
+<p-button
+    class="score-counter"
+    label="{{ score.counter }}"
+    (click)="counterClick.emit()">
+</p-button>

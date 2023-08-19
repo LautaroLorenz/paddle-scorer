@@ -1,0 +1,68 @@
+:host {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    flex-direction: column;
+
+    .game-title {
+        display: flex;
+        background: #bed1eb;
+        border-bottom: 1px solid rgb(124, 124, 124);
+
+        .game-h1 {
+            display: flex;
+            width: 100%;
+            flex: 1;
+            justify-content: center;
+            margin: 0;
+            padding: 8px 0;
+        }
+    }
+
+    .stadium {
+        .stadium-player {
+            display: flex;
+            flex: 1;
+            margin: 16px;
+            border-radius: 4px;
+            border: 2px solid greenyellow;
+            overflow: hidden;
+
+            &.player-team-0 {
+                margin-right: 42px;
+            }
+
+            &.player-team-1 {
+                margin-left: 42px;
+            }
+        }
+
+        .stadium-score {
+            padding: 9px;
+        }
+
+        &.stadium-animation {
+            padding: 12px;
+            --border-size: 8px;
+            --border-angle: 0turn;
+            background-image: conic-gradient(from var(--border-angle), #213, #112 50%, #213), conic-gradient(from var(--border-angle), transparent 20%, #08f, #f03);
+            background-size: calc(100% - (var(--border-size) * 2)) calc(100% - (var(--border-size) * 2)), cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            animation: bg-spin 2s linear infinite;
+        }
+    }
+}
+
+@keyframes bg-spin {
+    to {
+        --border-angle: 1turn;
+    }
+}
+
+@property --border-angle {
+    syntax: "<angle>";
+    inherits: true;
+    initial-value: 0turn;
+}

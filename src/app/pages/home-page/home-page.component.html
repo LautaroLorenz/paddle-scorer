@@ -1,0 +1,84 @@
+<app-center-layout>
+    <h1>NUEVO JUEGO</h1>
+    <form [formGroup]="form">
+        <div
+            class="players"
+            formArrayName="players">
+            <span class="players-span">Participantes</span>
+            <div class="players-div">
+                <p-button
+                    class="players-button"
+                    icon="pi pi-user-plus"
+                    label="Agregar"
+                    iconPos="left"
+                    (click)="addPlayerControl()">
+                </p-button>
+                <p-button
+                    class="players-button"
+                    icon="pi pi-refresh"
+                    label="Colores"
+                    iconPos="left"
+                    (click)="refreshColors()">
+                </p-button>
+            </div>
+            <div
+                class="player"
+                *ngFor="let player of players.controls; let i = index">
+                <app-player-input
+                    class="player-input"
+                    formGroupName="{{ i }}"></app-player-input>
+                <p-button
+                    class="player-button"
+                    icon="pi pi-trash"
+                    styleClass="p-button-danger"
+                    [disabled]="players.controls.length <= 2"
+                    (click)="players.controls.length > 2 && removePlayerControl(i)">
+                </p-button>
+            </div>
+        </div>
+        <div
+            class="score"
+            formGroupName="score">
+            <div class="score-points">
+                <span class="score-points-span">Puntos</span>
+                <p-inputNumber
+                    formControlName="points"
+                    mode="decimal"
+                    [showButtons]="true"
+                    buttonLayout="vertical"
+                    spinnerMode="vertical"
+                    decrementButtonClass="p-button-secondary"
+                    incrementButtonClass="p-button-secondary"
+                    incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus"
+                    [min]="1"
+                    [max]="6">
+                </p-inputNumber>
+            </div>
+            <div class="score-sets">
+                <span class="score-sets-span">Sets</span>
+                <p-inputNumber
+                    formControlName="sets"
+                    mode="decimal"
+                    [showButtons]="true"
+                    buttonLayout="vertical"
+                    spinnerMode="vertical"
+                    decrementButtonClass="p-button-secondary"
+                    incrementButtonClass="p-button-secondary"
+                    incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus"
+                    [min]="1"
+                    [max]="3">
+                </p-inputNumber>
+            </div>
+        </div>
+    </form>
+    <button
+        pButton
+        type="button"
+        class="p-button-raised p-button-rounded p-button-success start-button"
+        [disabled]="!form.valid"
+        (click)="startGame()">
+        Comenzar
+    </button>
+</app-center-layout>

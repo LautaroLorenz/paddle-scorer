@@ -1,0 +1,72 @@
+@use 'sass:math';
+
+$line-floor-size: 4px;
+$line-margins-size: 2px;
+$line-red-size: 8px;
+$line-floor-color: white;
+$line-margins-color: grey;
+$line-red-color: rgb(205, 209, 149);
+
+:host {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    background-image: url('../../../assets/img/paddle-stadium-texture.jpg');
+    background-position: center center;
+    background-repeat: repeat;
+    background-size: auto;
+    position: relative;
+
+    .side {
+        display: flex;
+        height: 100%;
+        flex: 0 0 50%;
+        overflow: hidden;
+        border-top: $line-margins-size solid $line-margins-color;
+        border-bottom: $line-margins-size solid $line-margins-color;
+
+        &.side-left {
+            border-left: $line-margins-size solid $line-margins-color;
+        }
+
+        &.side-right {
+            border-right: $line-margins-size solid $line-margins-color;
+        }
+
+        .side-score {
+            display: flex;
+            flex: 0 0 25%;
+        }
+
+        .side-slots {
+            display: flex;
+            flex: 0 0 75%;
+            height: 100%;
+            flex-direction: column;
+            overflow: hidden;
+
+            &.slots-left {
+                border-left: $line-floor-size solid $line-floor-color;
+                border-right: math.div($line-red-size, 2) solid $line-red-color;
+            }
+
+            &.slots-right {
+                border-right: $line-floor-size solid $line-floor-color;
+                border-left: math.div($line-red-size, 2) solid $line-red-color;
+            }
+
+            .side-slot {
+                display: flex;
+                flex: 1;
+
+                &.slot-top {
+                    border-bottom: math.div($line-floor-size, 2) solid $line-floor-color;
+                }
+
+                &.slot-bottom {
+                    border-top: math.div($line-floor-size, 2) solid $line-floor-color;
+                }
+            }
+        }
+    }
+}
