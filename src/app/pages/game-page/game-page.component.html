@@ -58,11 +58,14 @@
         [dismissableMask]="true"
         [header]="playerSelectorHeader"
         [(visible)]="displayPlayerSelector">
-        <p-listbox
-            [options]="game.participants"
-            optionLabel="name"
-            optionValue="name"
-            (onClick)="playerSelectorClick($event)"></p-listbox>
+        <ng-container *ngIf="gameSettings">
+            <p-listbox
+                [options]="gameSettings.participants"
+                optionLabel="name"
+                optionValue="name"
+                (onClick)="playerSelectorClick($event)">
+            </p-listbox>
+        </ng-container>
     </p-dialog>
 </ng-container>
 <p-confirmDialog

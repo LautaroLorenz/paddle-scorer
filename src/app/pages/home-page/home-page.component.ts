@@ -1,32 +1,32 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { take } from 'rxjs';
 import { getRandomBrightHexColor } from 'src/app/core/color-generator.core';
-import { GameService } from 'src/app/services/game.service';
+import { GameSettings } from 'src/app/models/game-settings.model';
+import { GameSettingsService } from 'src/app/services/game-settings.service';
 
 @Component({
     templateUrl: './home-page.component.html',
     styleUrls: ['./home-page.component.scss']
 })
 export class HomePageComponent implements OnInit {
-    form!: FormGroup;
-
-    private readonly INIT_PLAYERS = 4;
+    gameSettingsForm!: FormGroup;
 
     constructor(
         private fb: FormBuilder,
-        private gameService: GameService,
+        private gameSettingsService: GameSettingsService,
         private router: Router
-    ) {
-        this.buildForm();
-    }
+    ) {}
 
     ngOnInit(): void {
-        this.loadFormValue();
+        this.gameSettingsService.gameSettings$.pipe(take(1)).subscribe((gameSeetings: GameSettings) => {
+            this.buildGameSettingsForm(gameSeetings);
+        });
     }
 
     get participants(): FormArray {
-        return this.form.get('participants') as FormArray;
+        return this.gameSettingsForm.get('participants') as FormArray;
     }
 
     addParticipantControl(): void {
@@ -53,41 +53,23 @@ export class HomePageComponent implements OnInit {
     }
 
     startGame(): void {
-        this.saveFormValue();
-        const { participants, goalScore } = this.form.getRawValue();
-        this.gameService.initGame(participants, goalScore);
+        const gameSettings: GameSettings = this.gameSettingsForm.getRawValue();
+        this.gameSettingsService.saveGameSettingsOnStorage(gameSettings);
         this.router.navigate(['game']);
     }
 
-    private loadFormValue(): void {
-        const participantsLength = localStorage.getItem('participantsLength');
-        const savedValue = localStorage.getItem('settings');
-        this.generateParticipants(participantsLength ? +participantsLength : this.INIT_PLAYERS);
-        if (savedValue) {
-            const value = JSON.parse(savedValue);
-            this.form.setValue(value);
-        }
-    }
-
-    private saveFormValue(): void {
-        localStorage.setItem('participantsLength', JSON.stringify(this.participants.length));
-        localStorage.setItem('settings', JSON.stringify(this.form.getRawValue()));
-    }
-
-    private buildForm(): void {
-        this.form = this.fb.group({
-            participants: this.fb.array([]),
+    private buildGameSettingsForm({ participants, goalScore }: GameSettings): void {
+        this.gameSettingsForm = this.fb.group({
+            participants: this.fb.array([], [Validators.minLength(4)]),
             goalScore: this.fb.group({
-                points: this.fb.control(6, [Validators.min(1), Validators.max(6)]),
-                sets: this.fb.control(3, [Validators.min(1), Validators.max(3)]),
-                counter: this.fb.control(0, [Validators.required])
+                points: this.fb.control(goalScore.points, [Validators.min(1), Validators.max(6)]),
+                sets: this.fb.control(goalScore.sets, [Validators.min(1), Validators.max(3)])
             })
         });
-    }
-
-    private generateParticipants(participantsLength: number): void {
-        for (let index = 0; index < participantsLength; index++) {
+        for (let index = 0; index < participants.length; index++) {
+            const participant = participants[index];
             this.addParticipantControl();
+            this.participants.controls[index].setValue(participant);            
         }
     }
 }

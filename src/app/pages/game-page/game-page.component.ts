@@ -1,5 +1,5 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Game } from 'src/app/models/game.model';
 import { Player, PlayerIndex } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
@@ -8,6 +8,8 @@ import { Router } from '@angular/router';
 import { Score } from 'src/app/models/score.model';
 import { TeamIndex } from 'src/app/models/team.model';
 import { DOCUMENT } from '@angular/common';
+import { GameSettingsService } from 'src/app/services/game-settings.service';
+import { GameSettings } from 'src/app/models/game-settings.model';
 
 @Component({
     templateUrl: './game-page.component.html',
@@ -17,12 +19,14 @@ export class GamePageComponent implements OnInit, OnDestroy {
     menuOptions: MenuItem[];
     displayPlayerSelector: boolean = false;
     playerSelectorHeader: string = '';
+    gameSettings: GameSettings | undefined;
     private isFullScreen: boolean = false;
     private playerSelectorTeamIndex: TeamIndex | null = null;
     private playerSelectorPlayerIndex: PlayerIndex | null = null;
     private _onDestroy = new Subject<void>();
 
     constructor(
+        private gameSettingsService: GameSettingsService,
         private gameService: GameService,
         private router: Router,
         private confirmationService: ConfirmationService,
@@ -31,11 +35,18 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.menuOptions = this.getMenuOptions();
     }
 
+
+
     get game$(): Observable<Game> {
         return this.gameService.game$;
     }
 
     ngOnInit(): void {
+        this.gameSettingsService.gameSettings$.pipe(take(1)).subscribe((gameSettings) => {
+            this.gameSettings = gameSettings;
+            this.gameService.initGame();
+            this.gameService.setPlayers(gameSettings.participants);
+        });
         this.gameService.gameEnd$.pipe(takeUntil(this._onDestroy)).subscribe((game) => {
             const { teams, winnerTeamIndex } = game;
             const winnerTeamNumber = winnerTeamIndex! + 1;
@@ -56,7 +67,9 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 rejectVisible: false,
                 accept: () => {
                     this.gameService.restartScore();
-                    this.gameService.setNextPlayers();
+                    if (this.gameSettings && this.gameSettings.participants) {
+                        this.gameService.setPlayers(this.gameSettings.participants);
+                    }
                 },
                 closeOnEscape: false
             });
@@ -80,13 +93,16 @@ export class GamePageComponent implements OnInit, OnDestroy {
 
     playerSelectorClick({ option }: { option: Player }): void {
         this.displayPlayerSelector = false;
-        this.gameService.setGamePlayerAt(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
+        this.gameService.setPlayerAt(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
         this.playerSelectorTeamIndex = null;
         this.playerSelectorPlayerIndex = null;
     }
 
     incrementCounterAt(teamIndex: TeamIndex): void {
-        this.gameService.incrementScoreAt(teamIndex, 'counter');
+        if (!this.gameSettings || !this.gameSettings.goalScore) {
+            return;
+        }
+        this.gameService.incrementScoreAt(this.gameSettings.goalScore, teamIndex, 'counter');
     }
 
     ngOnDestroy(): void {
@@ -102,7 +118,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 label: 'deshacer cambio',
                 icon: 'pi pi-undo',
                 command: () => {
-                    this.gameService.undoGameStatus();
+                    this.gameService.undo();
                 }
             },
             {

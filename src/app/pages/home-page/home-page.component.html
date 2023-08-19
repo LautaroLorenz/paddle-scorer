@@ -1,6 +1,6 @@
-<app-center-layout>
+<app-center-layout *ngIf="gameSettingsForm">
     <h1>NUEVO JUEGO</h1>
-    <form [formGroup]="form">
+    <form [formGroup]="gameSettingsForm">
         <div
             class="participants"
             formArrayName="participants">
@@ -77,7 +77,7 @@
         pButton
         type="button"
         class="p-button-raised p-button-rounded p-button-success start-button"
-        [disabled]="!form.valid"
+        [disabled]="!gameSettingsForm.valid"
         (click)="startGame()">
         Comenzar
     </button>
