@@ -68,27 +68,50 @@ export class GameService {
         this.saveEndGameOnStorage(undefined, 'clear');
     }
 
-    incrementCounterAt(gameStatus: Game, teamIndexToIncrement: TeamIndex): void {
-        let isPoint = false;
+    incrementScoreAt(gameStatus: Game, teamIndexToIncrement: TeamIndex, mode: 'counter' | 'point' | 'set'): void {
+        let winnerTeamIndex: TeamIndex | null = null;
         let newGameStatus: Game = { ...gameStatus };
         let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
+        const scoreToIncrement = newScores[teamIndexToIncrement];
 
-        switch (newScores[teamIndexToIncrement].counter) {
-            case 0:
-                newScores[teamIndexToIncrement].counter = 15;
+        switch (mode) {
+            case 'counter':
+                switch (scoreToIncrement.counter) {
+                    case 0:
+                        scoreToIncrement.counter = 15;
+                        break;
+                    case 15:
+                        scoreToIncrement.counter = 30;
+                        break;
+                    case 30:
+                        scoreToIncrement.counter = 40;
+                        break;
+                    case 40:
+                        return this.incrementScoreAt(gameStatus, teamIndexToIncrement, 'point');
+                }
                 break;
-            case 15:
-                newScores[teamIndexToIncrement].counter = 30;
-                break;
-            case 30:
-                newScores[teamIndexToIncrement].counter = 40;
-                break;
-            case 40:
+            case 'point':
                 newScores[0].counter = 0;
                 newScores[1].counter = 0;
-                isPoint = true;
+                scoreToIncrement.points = scoreToIncrement.points + 1;
+                if (scoreToIncrement.points === gameStatus.goalScore.points) {
+                    return this.incrementScoreAt(gameStatus, teamIndexToIncrement, 'set');
+                }
+                break;
+            case 'set':
+                newScores[0].counter = 0;
+                newScores[1].counter = 0;
+                newScores[0].points = 0;
+                newScores[1].points = 0;
+                scoreToIncrement.sets = scoreToIncrement.sets + 1;
+                if (scoreToIncrement.sets === gameStatus.goalScore.sets) {
+                    newScores[0].sets = 0;
+                    newScores[1].sets = 0;
+                    winnerTeamIndex = teamIndexToIncrement;
+                }
                 break;
         }
+
         newGameStatus = {
             ...newGameStatus,
             teams: newGameStatus.teams.map((team, index) => ({
@@ -99,67 +122,8 @@ export class GameService {
             })) as [Team, Team],
             isGoldenPoint: this.isGoldenPoint(newGameStatus)
         };
-        if (isPoint) {
-            this.incrementPointAt(newGameStatus, teamIndexToIncrement);
-        } else {
-            this.saveGameOnStorage(newGameStatus, 'append');
-        }
-    }
-
-    incrementPointAt(gameStatus: Game, teamIndexToIncrement: TeamIndex): void {
-        let isSet = false;
-        let newGameStatus: Game = { ...gameStatus };
-        let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
-
-        newScores[0].counter = 0;
-        newScores[1].counter = 0;
-        newScores[teamIndexToIncrement].points = newScores[teamIndexToIncrement].points + 1;
-        if (newScores[teamIndexToIncrement].points === gameStatus.goalScore.points) {
-            newScores[0].points = 0;
-            newScores[1].points = 0;
-            isSet = true;
-        }
-        newGameStatus = {
-            ...newGameStatus,
-            teams: newGameStatus.teams.map((team, index) => ({
-                ...team,
-                score: {
-                    ...newScores[index]
-                }
-            })) as [Team, Team]
-        };
-        if (isSet) {
-            this.incrementSetAt(newGameStatus, teamIndexToIncrement);
-        } else {
-            this.saveGameOnStorage(newGameStatus, 'append');
-        }
-    }
-
-    incrementSetAt(gameStatus: Game, teamIndexToIncrement: TeamIndex): void {
-        let winnerTeamIndex: TeamIndex | null = null;
-        let newGameStatus: Game = { ...gameStatus };
-        let newScores: [Score, Score] = [newGameStatus.teams[0].score, newGameStatus.teams[1].score];
-
-        newScores[0].counter = 0;
-        newScores[1].counter = 0;
-        newScores[0].points = 0;
-        newScores[1].points = 0;
-        newScores[teamIndexToIncrement].sets = newScores[teamIndexToIncrement].sets + 1;
-        if (newScores[teamIndexToIncrement].sets === gameStatus.goalScore.sets) {
-            newScores[0].sets = 0;
-            newScores[1].sets = 0;
-            winnerTeamIndex = teamIndexToIncrement;
-        }
-        newGameStatus = {
-            ...newGameStatus,
-            teams: newGameStatus.teams.map((team, index) => ({
-                ...team,
-                score: {
-                    ...newScores[index]
-                }
-            })) as [Team, Team]
-        };
         this.saveGameOnStorage(newGameStatus, 'append');
+
         if (winnerTeamIndex !== null) {
             const newEndGame: EndGame = {
                 game: newGameStatus,

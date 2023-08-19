@@ -87,7 +87,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
     }
 
     incrementCounterAt(game: Game, teamIndex: TeamIndex): void {
-        this.gameService.incrementCounterAt(game, teamIndex);
+        this.gameService.incrementScoreAt(game, teamIndex, 'counter');
     }
 
     ngOnDestroy(): void {
@@ -107,20 +107,6 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 }
             },
             {
-                label: `${this.isFullScreen ? 'Quit' : ''} full screen`,
-                icon: `pi pi-window-${this.isFullScreen ? 'minimize' : 'maximize'}`,
-                command: () => {
-                    if (this.isFullScreen) {
-                        this.document?.exitFullscreen();
-                        this.isFullScreen = false;
-                    } else {
-                        this.document?.documentElement?.requestFullscreen();
-                        this.isFullScreen = true;
-                    }
-                    this.menuOptions = this.getMenuOptions();
-                }
-            },
-            {
                 label: 'reiniciar score',
                 icon: 'pi pi-refresh',
                 command: () => {
@@ -133,6 +119,20 @@ export class GamePageComponent implements OnInit, OnDestroy {
                             this.gameService.restartScore();
                         }
                     });
+                }
+            },
+            {
+                label: `${this.isFullScreen ? 'Quit' : ''} full screen`,
+                icon: `pi pi-window-${this.isFullScreen ? 'minimize' : 'maximize'}`,
+                command: () => {
+                    if (this.isFullScreen) {
+                        this.document?.exitFullscreen();
+                        this.isFullScreen = false;
+                    } else {
+                        this.document?.documentElement?.requestFullscreen();
+                        this.isFullScreen = true;
+                    }
+                    this.menuOptions = this.getMenuOptions();
                 }
             },
             {
