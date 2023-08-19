@@ -5,20 +5,20 @@
         flex-direction: column;
         gap: 32px;
 
-        .players {
+        .participants {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             gap: 8px;
 
-            .players-div {
+            .participants-div {
                 display: flex;
                 margin-bottom: 8px;
                 gap: 8px;
             }
 
-            .player {
+            .participant {
                 display: flex;
                 gap: 16px;
             }

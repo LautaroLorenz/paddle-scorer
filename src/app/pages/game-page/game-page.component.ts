@@ -36,9 +36,8 @@ export class GamePageComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.gameService.endGame$.pipe(takeUntil(this._onDestroy)).subscribe((endGame) => {
-            const { game, winnerTeamIndex } = endGame;
-            const { teams } = game;
+        this.gameService.gameEnd$.pipe(takeUntil(this._onDestroy)).subscribe((game) => {
+            const { teams, winnerTeamIndex } = game;
             const winnerTeamNumber = winnerTeamIndex! + 1;
             const winnerPlayer1 = teams[winnerTeamIndex!].players[0];
             const winnerPlayer2 = teams[winnerTeamIndex!].players[1];
@@ -57,7 +56,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 rejectVisible: false,
                 accept: () => {
                     this.gameService.restartScore();
-                    this.gameService.setNextPlayers(game);
+                    this.gameService.setNextPlayers();
                 },
                 closeOnEscape: false
             });
@@ -79,15 +78,15 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.displayPlayerSelector = true;
     }
 
-    playerSelectorClick({ option }: { option: Player }, game: Game): void {
+    playerSelectorClick({ option }: { option: Player }): void {
         this.displayPlayerSelector = false;
-        this.gameService.setGamePlayerAt(game, this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
+        this.gameService.setGamePlayerAt(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
         this.playerSelectorTeamIndex = null;
         this.playerSelectorPlayerIndex = null;
     }
 
-    incrementCounterAt(game: Game, teamIndex: TeamIndex): void {
-        this.gameService.incrementCounterAt(game, teamIndex);
+    incrementCounterAt(teamIndex: TeamIndex): void {
+        this.gameService.incrementScoreAt(teamIndex, 'counter');
     }
 
     ngOnDestroy(): void {
@@ -107,20 +106,6 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 }
             },
             {
-                label: `${this.isFullScreen ? 'Quit' : ''} full screen`,
-                icon: `pi pi-window-${this.isFullScreen ? 'minimize' : 'maximize'}`,
-                command: () => {
-                    if (this.isFullScreen) {
-                        this.document?.exitFullscreen();
-                        this.isFullScreen = false;
-                    } else {
-                        this.document?.documentElement?.requestFullscreen();
-                        this.isFullScreen = true;
-                    }
-                    this.menuOptions = this.getMenuOptions();
-                }
-            },
-            {
                 label: 'reiniciar score',
                 icon: 'pi pi-refresh',
                 command: () => {
@@ -133,6 +118,20 @@ export class GamePageComponent implements OnInit, OnDestroy {
                             this.gameService.restartScore();
                         }
                     });
+                }
+            },
+            {
+                label: `${this.isFullScreen ? 'Quit' : ''} full screen`,
+                icon: `pi pi-window-${this.isFullScreen ? 'minimize' : 'maximize'}`,
+                command: () => {
+                    if (this.isFullScreen) {
+                        this.document?.exitFullscreen();
+                        this.isFullScreen = false;
+                    } else {
+                        this.document?.documentElement?.requestFullscreen();
+                        this.isFullScreen = true;
+                    }
+                    this.menuOptions = this.getMenuOptions();
                 }
             },
             {
