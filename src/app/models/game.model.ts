@@ -1,8 +1,8 @@
 import { SnapshotStatus } from '../core/snapshot.core';
-import { PlayerSnapshotStatus, Players } from './player.model';
+import { PlayerSnapshotStatus, RequiredPlayers } from './player.model';
 import { Team, TeamIndex } from './team.model';
 
-export const DEFAULT_GAME: (players: Players) => Game = (players) => ({
+export const DEFAULT_GAME: (players: RequiredPlayers) => Game = (players) => ({
     teams: [
         {
             players: [players[0], players[1]],

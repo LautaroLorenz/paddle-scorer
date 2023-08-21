@@ -1,6 +1,6 @@
 import { getRandomBrightHexColor } from '../core/color-generator.core';
 import { GoalScore } from './goal-score.model';
-import { Player } from './player.model';
+import { Player, RequiredPlayers } from './player.model';
 
 export const DEFAULT_GAME_SETTINGS: GameSettings = {
     goalScore: {
@@ -32,6 +32,6 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
 };
 
 export interface GameSettings {
-    participants: Player[];
+    participants: [...RequiredPlayers, ...Player[]];
     goalScore: GoalScore;
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { DEFAULT_GAME, Game, GameSnapshotStatus } from '../models/game.model';
-import { Player, PlayerIndex, Players } from '../models/player.model';
+import { Player, PlayerIndex, RequiredPlayers } from '../models/player.model';
 import { TeamIndex } from '../models/team.model';
 import { Snapshot } from '../core/snapshot.core';
 import { GoalScore } from '../models/goal-score.model';
@@ -27,7 +27,7 @@ export class GameService {
         return this.gameEnd.asObservable();
     }
 
-    initGame(players: Players): void {
+    initGame(players: RequiredPlayers): void {
         const game: Game = DEFAULT_GAME(players);
         this.game.next(game);
         this.snapshot.clearHistory();
@@ -164,10 +164,9 @@ export class GameService {
     restartScore(): void {
         const gameSnapshot = this.snapshot.get();
         const [team1, team2] = gameSnapshot.teams;
-        const [player00, player01] = team1.players;
-        const [player10, player11] = team2.players;
-        const players: Players = [player00, player01, player10, player11];
-        const game = DEFAULT_GAME(players);
+        const [player1, player2] = team1.players;
+        const [player3, player4] = team2.players;
+        const game = DEFAULT_GAME([player1, player2, player3, player4]);
         this.game.next(game);
         this.snapshot.generate(game);
     }

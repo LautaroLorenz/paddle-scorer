@@ -7,7 +7,7 @@ export interface Player {
 }
 
 export type PlayerIndex = 0 | 1;
-export type Players = [Player, Player, Player, Player];
+export type RequiredPlayers = [Player, Player, Player, Player];
 
 export class PlayerSnapshotStatus implements SnapshotStatus<Player> {
     clone(player: Player): Player {
