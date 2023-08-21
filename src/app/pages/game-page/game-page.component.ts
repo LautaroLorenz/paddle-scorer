@@ -1,7 +1,7 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Game } from 'src/app/models/game.model';
-import { Player, PlayerIndex } from 'src/app/models/player.model';
+import { Player, PlayerIndex, Players } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
@@ -35,8 +35,6 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.menuOptions = this.getMenuOptions();
     }
 
-
-
     get game$(): Observable<Game> {
         return this.gameService.game$;
     }
@@ -44,8 +42,8 @@ export class GamePageComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.gameSettingsService.gameSettings$.pipe(take(1)).subscribe((gameSettings) => {
             this.gameSettings = gameSettings;
-            this.gameService.initGame();
-            this.gameService.setPlayers(gameSettings.participants);
+            const players: Players = gameSettings.participants.filter((_, index) => index < 4) as Players;
+            this.gameService.initGame(players);
         });
         this.gameService.gameEnd$.pipe(takeUntil(this._onDestroy)).subscribe((game) => {
             const { teams, winnerTeamIndex } = game;
@@ -76,7 +74,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
         });
     }
 
-    getPlayerAt(game: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex): Player | undefined {
+    getPlayerAt(game: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex): Player {
         return game.teams[teamIndex].players[playerIndex];
     }
 
