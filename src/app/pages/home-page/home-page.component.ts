@@ -30,9 +30,13 @@ export class HomePageComponent implements OnInit {
     }
 
     addParticipantControl(): void {
+        let id: number = 0;
+        if (this.participants.controls.length) {
+            id = this.participants.controls[this.participants.controls.length - 1].get('id')?.value + 1;
+        }
         this.participants.controls.push(
             this.fb.group({
-                id: this.fb.control(this.participants.controls.length, [Validators.required]),
+                id: this.fb.control(id, [Validators.required]),
                 name: this.fb.control('', [Validators.required]),
                 color: this.fb.control(getRandomBrightHexColor(), [Validators.required])
             })
@@ -69,7 +73,7 @@ export class HomePageComponent implements OnInit {
         for (let index = 0; index < participants.length; index++) {
             const participant = participants[index];
             this.addParticipantControl();
-            this.participants.controls[index].setValue(participant);            
+            this.participants.controls[index].setValue(participant);
         }
     }
 }

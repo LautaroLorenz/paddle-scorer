@@ -8,6 +8,6 @@ import { Player } from 'src/app/models/player.model';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PlayerComponent {
-  @Input() player: Player | undefined = undefined;
-  @Output() playerClick = new EventEmitter<Player | undefined>(); 
+  @Input() player!: Player;
+  @Output() playerClick = new EventEmitter<Player>(); 
 }

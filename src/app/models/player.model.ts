@@ -5,3 +5,4 @@ export interface Player {
 }
 
 export type PlayerIndex = 0 | 1;
+export type Players = [Player, Player, Player, Player];

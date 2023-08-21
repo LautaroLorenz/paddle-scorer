@@ -1,7 +1,7 @@
 <div class="player" (click)="playerClick.emit(player)">
     <div
         class="player-background-color"
-        [ngStyle]="{ background: player?.color || 'white' }"></div>
+        [ngStyle]="{ background: player.color || 'white' }"></div>
     <i class="pi pi-user"></i>
-    <span class="player-span">{{ player?.name }}</span>
+    <span class="player-span">{{ player.name }}</span>
 </div>

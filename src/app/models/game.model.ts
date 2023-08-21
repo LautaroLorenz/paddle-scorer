@@ -1,9 +1,10 @@
+import { Players } from './player.model';
 import { Team, TeamIndex } from './team.model';
 
-export const DEFAULT_GAME: Game = {
+export const DEFAULT_GAME: (players: Players) => Game = (players) => ({
     teams: [
         {
-            players: [undefined, undefined],
+            players: [players[0], players[1]],
             score: {
                 points: 0,
                 sets: 0,
@@ -11,7 +12,7 @@ export const DEFAULT_GAME: Game = {
             }
         },
         {
-            players: [undefined, undefined],
+            players: [players[2], players[3]],
             score: {
                 points: 0,
                 sets: 0,
@@ -21,7 +22,7 @@ export const DEFAULT_GAME: Game = {
     ],
     isGoldenPoint: false,
     winnerTeamIndex: null
-};
+});
 
 export interface Game {
     teams: [Team, Team];

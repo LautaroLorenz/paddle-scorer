@@ -24,7 +24,7 @@ export class Snapshot<T> {
         return this.get();
     }
 
-    undoAll(): void {
+    clearHistory(): void {
         this._history = [];
     }
 }

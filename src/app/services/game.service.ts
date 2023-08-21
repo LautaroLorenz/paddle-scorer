@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { DEFAULT_GAME, Game } from '../models/game.model';
-import { Player, PlayerIndex } from '../models/player.model';
+import { Player, PlayerIndex, Players } from '../models/player.model';
 import { TeamIndex } from '../models/team.model';
 import { Snapshot } from '../core/snapshot.core';
 import { GoalScore } from '../models/goal-score.model';
@@ -26,10 +26,10 @@ export class GameService {
         return this.gameEnd.asObservable();
     }
 
-    initGame(): void {
-        const game: Game = { ...DEFAULT_GAME };
+    initGame(players: Players): void {
+        const game: Game = DEFAULT_GAME(players);
         this.game.next(game);
-        this.snapshot.undoAll();
+        this.snapshot.clearHistory();
         this.snapshot.generate(game);
     }
 
@@ -40,16 +40,24 @@ export class GameService {
         }
 
         const gameCopy = this.copy(gameSnapshot);
+        let teamIndexAux: TeamIndex | null = null,
+            playerIndexAux: PlayerIndex | null = null,
+            playerAux: Player;
         for (let teamIndex = 0; teamIndex < gameCopy.teams.length; teamIndex++) {
             const team = gameCopy.teams[teamIndex];
             for (let playerIndex = 0; playerIndex < team.players.length; playerIndex++) {
                 const player = team.players[playerIndex];
-                if (player && player.id === playerToSet.id) {
-                    gameCopy.teams[teamIndex].players[playerIndex] = undefined;
+                if (player.id === playerToSet.id) {
+                    teamIndexAux = teamIndex as TeamIndex;
+                    playerIndexAux = playerIndex as PlayerIndex;
                 }
             }
         }
+        playerAux = gameCopy.teams[teamIndexToSet].players[playerIndexToSet];
         gameCopy.teams[teamIndexToSet].players[playerIndexToSet] = playerToSet;
+        if (teamIndexAux !== null && playerIndexAux !== null) {
+            gameCopy.teams[teamIndexAux].players[playerIndexAux] = playerAux;
+        }
         this.game.next(gameCopy);
         this.snapshot.generate(gameCopy);
     }
@@ -219,11 +227,7 @@ export class GameService {
         };
     }
 
-    private copyPlayer(player: Player | undefined): Player | undefined {
-        if (player === undefined) {
-            return undefined;
-        }
-
+    private copyPlayer(player: Player): Player {
         return {
             id: player.id,
             color: player.color,
