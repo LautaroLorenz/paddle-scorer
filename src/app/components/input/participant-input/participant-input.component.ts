@@ -3,19 +3,19 @@ import { ControlValueAccessor, FormArrayName, FormGroup, NG_VALUE_ACCESSOR } fro
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-    selector: 'app-player-input',
-    templateUrl: './player-input.component.html',
-    styleUrls: ['./player-input.component.scss'],
+    selector: 'app-participant-input',
+    templateUrl: './participant-input.component.html',
+    styleUrls: ['./participant-input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [
         {
             provide: NG_VALUE_ACCESSOR,
-            useExisting: PlayerInputComponent,
+            useExisting: ParticipantInputComponent,
             multi: true
         }
     ]
 })
-export class PlayerInputComponent implements ControlValueAccessor, OnInit, OnDestroy {
+export class ParticipantInputComponent implements ControlValueAccessor, OnInit, OnDestroy {
     formGroup!: FormGroup;
     @Input() public formGroupName!: string;
 

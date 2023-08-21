@@ -19,7 +19,7 @@
             class="stadium-score score-team-0"
             score-team-0
             [score]="getScoreAt(game, 0)"
-            (counterClick)="incrementCounterAt(game, 0)">
+            (counterClick)="incrementCounterAt(0)">
         </app-score>
         <app-player
             slot-0-0
@@ -49,7 +49,7 @@
             class="stadium-score score-team-1"
             score-team-1
             [score]="getScoreAt(game, 1)"
-            (counterClick)="incrementCounterAt(game, 1)">
+            (counterClick)="incrementCounterAt(1)">
         </app-score>
     </app-stadium>
     <p-dialog
@@ -58,11 +58,14 @@
         [dismissableMask]="true"
         [header]="playerSelectorHeader"
         [(visible)]="displayPlayerSelector">
-        <p-listbox
-            [options]="game.participants"
-            optionLabel="name"
-            optionValue="name"
-            (onClick)="playerSelectorClick($event, game)"></p-listbox>
+        <ng-container *ngIf="gameSettings">
+            <p-listbox
+                [options]="gameSettings.participants"
+                optionLabel="name"
+                optionValue="name"
+                (onClick)="playerSelectorClick($event)">
+            </p-listbox>
+        </ng-container>
     </p-dialog>
 </ng-container>
 <p-confirmDialog

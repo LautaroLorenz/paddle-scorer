@@ -1,20 +1,20 @@
-<app-center-layout>
+<app-center-layout *ngIf="gameSettingsForm">
     <h1>NUEVO JUEGO</h1>
-    <form [formGroup]="form">
+    <form [formGroup]="gameSettingsForm">
         <div
-            class="players"
-            formArrayName="players">
-            <span class="players-span">Participantes</span>
-            <div class="players-div">
+            class="participants"
+            formArrayName="participants">
+            <span class="participants-span">Participantes</span>
+            <div class="participants-div">
                 <p-button
-                    class="players-button"
+                    class="participants-button"
                     icon="pi pi-user-plus"
                     label="Agregar"
                     iconPos="left"
-                    (click)="addPlayerControl()">
+                    (click)="addParticipantControl()">
                 </p-button>
                 <p-button
-                    class="players-button"
+                    class="participants-button"
                     icon="pi pi-refresh"
                     label="Colores"
                     iconPos="left"
@@ -22,23 +22,23 @@
                 </p-button>
             </div>
             <div
-                class="player"
-                *ngFor="let player of players.controls; let i = index">
-                <app-player-input
-                    class="player-input"
-                    formGroupName="{{ i }}"></app-player-input>
+                class="participant"
+                *ngFor="let participant of participants.controls; let i = index">
+                <app-participant-input
+                    class="participant-input"
+                    formGroupName="{{ i }}"></app-participant-input>
                 <p-button
-                    class="player-button"
+                    class="participant-button"
                     icon="pi pi-trash"
                     styleClass="p-button-danger"
-                    [disabled]="players.controls.length <= 2"
-                    (click)="players.controls.length > 2 && removePlayerControl(i)">
+                    [disabled]="participants.controls.length <= 4"
+                    (click)="participants.controls.length > 4 && removeParticipantControl(i)">
                 </p-button>
             </div>
         </div>
         <div
             class="score"
-            formGroupName="score">
+            formGroupName="goalScore">
             <div class="score-points">
                 <span class="score-points-span">Puntos</span>
                 <p-inputNumber
@@ -77,7 +77,7 @@
         pButton
         type="button"
         class="p-button-raised p-button-rounded p-button-success start-button"
-        [disabled]="!form.valid"
+        [disabled]="!gameSettingsForm.valid"
         (click)="startGame()">
         Comenzar
     </button>

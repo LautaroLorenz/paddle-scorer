@@ -1,5 +1,5 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Game } from 'src/app/models/game.model';
 import { Player, PlayerIndex } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
@@ -8,6 +8,8 @@ import { Router } from '@angular/router';
 import { Score } from 'src/app/models/score.model';
 import { TeamIndex } from 'src/app/models/team.model';
 import { DOCUMENT } from '@angular/common';
+import { GameSettingsService } from 'src/app/services/game-settings.service';
+import { GameSettings } from 'src/app/models/game-settings.model';
 
 @Component({
     templateUrl: './game-page.component.html',
@@ -17,12 +19,14 @@ export class GamePageComponent implements OnInit, OnDestroy {
     menuOptions: MenuItem[];
     displayPlayerSelector: boolean = false;
     playerSelectorHeader: string = '';
+    gameSettings: GameSettings | undefined;
     private isFullScreen: boolean = false;
     private playerSelectorTeamIndex: TeamIndex | null = null;
     private playerSelectorPlayerIndex: PlayerIndex | null = null;
     private _onDestroy = new Subject<void>();
 
     constructor(
+        private gameSettingsService: GameSettingsService,
         private gameService: GameService,
         private router: Router,
         private confirmationService: ConfirmationService,
@@ -36,9 +40,13 @@ export class GamePageComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.gameService.endGame$.pipe(takeUntil(this._onDestroy)).subscribe((endGame) => {
-            const { game, winnerTeamIndex } = endGame;
-            const { teams } = game;
+        this.gameSettingsService.gameSettings$.pipe(take(1)).subscribe((gameSettings) => {
+            this.gameSettings = gameSettings;
+            const [player1, player2, player3, player4] = gameSettings.participants;
+            this.gameService.initGame([player1, player2, player3, player4]);
+        });
+        this.gameService.gameEnd$.pipe(takeUntil(this._onDestroy)).subscribe((game) => {
+            const { teams, winnerTeamIndex } = game;
             const winnerTeamNumber = winnerTeamIndex! + 1;
             const winnerPlayer1 = teams[winnerTeamIndex!].players[0];
             const winnerPlayer2 = teams[winnerTeamIndex!].players[1];
@@ -57,14 +65,16 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 rejectVisible: false,
                 accept: () => {
                     this.gameService.restartScore();
-                    this.gameService.setNextPlayers(game);
+                    if (this.gameSettings && this.gameSettings.participants) {
+                        this.gameService.setPlayers(this.gameSettings.participants);
+                    }
                 },
                 closeOnEscape: false
             });
         });
     }
 
-    getPlayerAt(game: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex): Player | undefined {
+    getPlayerAt(game: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex): Player {
         return game.teams[teamIndex].players[playerIndex];
     }
 
@@ -79,15 +89,18 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.displayPlayerSelector = true;
     }
 
-    playerSelectorClick({ option }: { option: Player }, game: Game): void {
+    playerSelectorClick({ option }: { option: Player }): void {
         this.displayPlayerSelector = false;
-        this.gameService.setGamePlayerAt(game, this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
+        this.gameService.setPlayerAt(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
         this.playerSelectorTeamIndex = null;
         this.playerSelectorPlayerIndex = null;
     }
 
-    incrementCounterAt(game: Game, teamIndex: TeamIndex): void {
-        this.gameService.incrementCounterAt(game, teamIndex);
+    incrementCounterAt(teamIndex: TeamIndex): void {
+        if (!this.gameSettings || !this.gameSettings.goalScore) {
+            return;
+        }
+        this.gameService.incrementScoreAt(this.gameSettings.goalScore, teamIndex, 'counter');
     }
 
     ngOnDestroy(): void {
@@ -103,21 +116,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 label: 'deshacer cambio',
                 icon: 'pi pi-undo',
                 command: () => {
-                    this.gameService.undoGameStatus();
-                }
-            },
-            {
-                label: `${this.isFullScreen ? 'Quit' : ''} full screen`,
-                icon: `pi pi-window-${this.isFullScreen ? 'minimize' : 'maximize'}`,
-                command: () => {
-                    if (this.isFullScreen) {
-                        this.document?.exitFullscreen();
-                        this.isFullScreen = false;
-                    } else {
-                        this.document?.documentElement?.requestFullscreen();
-                        this.isFullScreen = true;
-                    }
-                    this.menuOptions = this.getMenuOptions();
+                    this.gameService.undo();
                 }
             },
             {
@@ -133,6 +132,20 @@ export class GamePageComponent implements OnInit, OnDestroy {
                             this.gameService.restartScore();
                         }
                     });
+                }
+            },
+            {
+                label: `${this.isFullScreen ? 'Quit' : ''} full screen`,
+                icon: `pi pi-window-${this.isFullScreen ? 'minimize' : 'maximize'}`,
+                command: () => {
+                    if (this.isFullScreen) {
+                        this.document?.exitFullscreen();
+                        this.isFullScreen = false;
+                    } else {
+                        this.document?.documentElement?.requestFullscreen();
+                        this.isFullScreen = true;
+                    }
+                    this.menuOptions = this.getMenuOptions();
                 }
             },
             {
