@@ -22,10 +22,17 @@ export class GameSettingsService {
     }
 
     private loadGameSettingsFromStorage(): void {
-        const gameSettings = localStorage.getItem('gameSettings');
-        if (!gameSettings) {
+        const savedGameSettings = localStorage.getItem('gameSettings');
+        if (!savedGameSettings) {
             return;
         }
-        this.gameSettings.next(JSON.parse(gameSettings));
+
+        // prevent undefined settings values
+        const gameSettings: GameSettings = {
+            ...DEFAULT_GAME_SETTINGS,
+            ...JSON.parse(savedGameSettings)
+        };
+        
+        this.gameSettings.next(gameSettings);
     }
 }
