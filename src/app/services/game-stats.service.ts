@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 import { Stats, TimesPlayedPerPlayer, TimesWinnedPerPlayer } from '../models/stats.model';
 import { Game } from '../models/game.model';
 import { Player } from '../models/player.model';
-import { TeamIndex } from '../models/team.model';
+import { GamePlayersService } from './game-players.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class GameStatsService {
+    constructor(private gamePlayersService: GamePlayersService) {}
+
     getStats(games: Game[], participants: Player[]): Stats {
         // inicializar estadísticas en cero para todos
         const stats: Stats = this.getEmptyStats(participants);
@@ -57,7 +59,7 @@ export class GameStatsService {
         timesPlayedPerPlayer: TimesPlayedPerPlayer,
         game: Game
     ): number {
-        const increment: boolean = this.playerPlaysGame(player, game);
+        const increment: boolean = this.gamePlayersService.playerPlaysGame(player, game);
         const isSet: boolean = !isNaN(timesPlayedPerPlayer[player.id]);
 
         if (increment && isSet) {
@@ -76,7 +78,10 @@ export class GameStatsService {
         timesWinnedPerPlayer: TimesWinnedPerPlayer,
         game: Game
     ): number {
-        const increment: boolean = this.playerPlaysGameByTeam(player, game, game.winnerTeamIndex!);
+        const increment: boolean = this.gamePlayersService.playerPlaysGameByTeam(
+            player,
+            game.teams[game.winnerTeamIndex!]
+        );
         const isSet: boolean = !isNaN(timesWinnedPerPlayer[player.id]);
 
         if (increment && isSet) {
@@ -88,13 +93,5 @@ export class GameStatsService {
         } else {
             return 0;
         }
-    }
-
-    private playerPlaysGame(player: Player, game: Game): boolean {
-        return this.playerPlaysGameByTeam(player, game, 0) || this.playerPlaysGameByTeam(player, game, 1);
-    }
-
-    private playerPlaysGameByTeam(player: Player, game: Game, teamIndex: TeamIndex): boolean {
-        return game.teams[teamIndex].players.map(({ id }) => id).includes(player.id);
     }
 }

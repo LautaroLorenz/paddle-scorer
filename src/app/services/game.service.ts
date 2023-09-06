@@ -2,10 +2,12 @@ import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { DEFAULT_GAME, Game, GameSnapshotStatus } from '../models/game.model';
 import { Player, PlayerIndex, RequiredPlayers } from '../models/player.model';
-import { TeamIndex } from '../models/team.model';
+import { Team, TeamIndex } from '../models/team.model';
 import { Snapshot } from '../core/snapshot.core';
 import { GoalScore } from '../models/goal-score.model';
 import { GameStatsService } from './game-stats.service';
+import { PLAYER_POSITIONS, PlayerPosition } from '../models/player-position.model';
+import { GamePlayersService } from './game-players.service';
 
 @Injectable({
     providedIn: 'root'
@@ -15,7 +17,10 @@ export class GameService {
     private gameEnd = new Subject<Game>();
     private snapshot: Snapshot<Game>;
 
-    constructor(private gameStatsService: GameStatsService) {
+    constructor(
+        private gameStatsService: GameStatsService,
+        private gamePlayersService: GamePlayersService
+    ) {
         const gameSnapshotStatus = new GameSnapshotStatus();
         this.snapshot = new Snapshot(gameSnapshotStatus);
     }
@@ -35,7 +40,8 @@ export class GameService {
         this.snapshot.generate(game);
     }
 
-    setPlayerAt(teamIndexToSet: TeamIndex, playerIndexToSet: PlayerIndex, playerToSet: Player): void {
+    setPlayerAt(playerPosition: PlayerPosition, playerToSet: Player): void {
+        const { teamIndex: teamIndexToSet, playerIndex: playerIndexToSet } = playerPosition;
         const gameSnapshot: Game = this.snapshot.get();
         let teamIndexAux: TeamIndex | null = null,
             playerIndexAux: PlayerIndex | null = null,
@@ -59,12 +65,38 @@ export class GameService {
         this.snapshot.generate(gameSnapshot);
     }
 
-    setPlayers(participants: Player[]): void {
+    setPlayers(participants: Player[], lockWinnerTeam: boolean): void {
         const endGames: Game[] = this.snapshot.history.filter(({ winnerTeamIndex }) => winnerTeamIndex !== null);
         const { timesPlayedPerPlayer, timesWinnedPerPlayer } = this.gameStatsService.getStats(endGames, participants);
-        
+
+        let lastGame: Game | null = null;
+        if (endGames[endGames.length - 1]) {
+            lastGame = endGames[endGames.length - 1];
+        }
+
+        let lastWinnerTeam: Team | null = null;
+        if (lastGame) {
+            lastWinnerTeam = lastGame.teams[lastGame.winnerTeamIndex!];
+        }
+
         const participantsCopy: Player[] = [...participants];
         const nextPlayers = participantsCopy.sort((playerA, playerB) => {
+            if (lockWinnerTeam && lastWinnerTeam) {
+                // Prioridad para quien ganó
+                if (
+                    this.gamePlayersService.playerPlaysGameByTeam(playerA, lastWinnerTeam) &&
+                    !this.gamePlayersService.playerPlaysGameByTeam(playerB, lastWinnerTeam)
+                ) {
+                    return -1;
+                }
+                if (
+                    !this.gamePlayersService.playerPlaysGameByTeam(playerA, lastWinnerTeam) &&
+                    this.gamePlayersService.playerPlaysGameByTeam(playerB, lastWinnerTeam)
+                ) {
+                    return 1;
+                }
+            }
+
             // Prioridad para quien menos jugó
             if (timesPlayedPerPlayer[playerA.id] > timesPlayedPerPlayer[playerB.id]) {
                 return 1;
@@ -83,11 +115,10 @@ export class GameService {
 
             return 0;
         });
-
-        this.setPlayerAt(0, 0, nextPlayers[0]);
-        this.setPlayerAt(0, 1, nextPlayers[1]);
-        this.setPlayerAt(1, 0, nextPlayers[2]);
-        this.setPlayerAt(1, 1, nextPlayers[3]);
+        
+        PLAYER_POSITIONS.forEach((position, index) => {
+            this.setPlayerAt(position, nextPlayers[index]);
+        });
     }
 
     incrementScoreAt(goalScore: GoalScore, teamIndexToIncrement: TeamIndex, mode: 'counter' | 'point' | 'set'): void {
