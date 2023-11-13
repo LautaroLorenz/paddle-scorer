@@ -7,7 +7,6 @@ import { Snapshot } from '../core/snapshot.core';
 import { GoalScore } from '../models/goal-score.model';
 import { GameStatsService } from './game-stats.service';
 import { PLAYER_POSITIONS, PlayerPosition } from '../models/player-position.model';
-import { GamePlayersService } from './game-players.service';
 
 @Injectable({
     providedIn: 'root'
@@ -17,10 +16,7 @@ export class GameService {
     private gameEnd = new Subject<Game>();
     private snapshot: Snapshot<Game>;
 
-    constructor(
-        private gameStatsService: GameStatsService,
-        private gamePlayersService: GamePlayersService
-    ) {
+    constructor(private gameStatsService: GameStatsService) {
         const gameSnapshotStatus = new GameSnapshotStatus();
         this.snapshot = new Snapshot(gameSnapshotStatus);
     }
@@ -89,7 +85,7 @@ export class GameService {
 
             return 0;
         });
-        
+
         PLAYER_POSITIONS.forEach((position, index) => {
             this.setPlayerAt(position, nextPlayers[index]);
         });
