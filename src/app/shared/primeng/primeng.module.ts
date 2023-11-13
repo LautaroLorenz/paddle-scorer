@@ -8,6 +8,7 @@ import { ListboxModule } from 'primeng/listbox';
 import { MenuModule } from 'primeng/menu';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @NgModule({
     declarations: [],
@@ -20,7 +21,8 @@ import { ConfirmationService } from 'primeng/api';
         DialogModule,
         ListboxModule,
         MenuModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        CheckboxModule
     ],
     providers: [ConfirmationService]
 })

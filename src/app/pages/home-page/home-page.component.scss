@@ -41,6 +41,14 @@
                 }
             }
         }
+
+        .optionals {
+            .field-checkbox {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+        }
     }
 
     .start-button {

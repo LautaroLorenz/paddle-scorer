@@ -1,7 +1,7 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Game } from 'src/app/models/game.model';
-import { Player, PlayerIndex } from 'src/app/models/player.model';
+import { Player } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
@@ -10,6 +10,8 @@ import { TeamIndex } from 'src/app/models/team.model';
 import { DOCUMENT } from '@angular/common';
 import { GameSettingsService } from 'src/app/services/game-settings.service';
 import { GameSettings } from 'src/app/models/game-settings.model';
+import { PLAYER_POSITIONS, PlayerPosition } from 'src/app/models/player-position.model';
+import { GamePlayersService } from 'src/app/services/game-players.service';
 
 @Component({
     templateUrl: './game-page.component.html',
@@ -20,9 +22,9 @@ export class GamePageComponent implements OnInit, OnDestroy {
     displayPlayerSelector: boolean = false;
     playerSelectorHeader: string = '';
     gameSettings: GameSettings | undefined;
+    PLAYER_POSITIONS = PLAYER_POSITIONS;
     private isFullScreen: boolean = false;
-    private playerSelectorTeamIndex: TeamIndex | null = null;
-    private playerSelectorPlayerIndex: PlayerIndex | null = null;
+    private playerSelectorPlayerPosition: PlayerPosition | null = null;
     private _onDestroy = new Subject<void>();
 
     constructor(
@@ -30,6 +32,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
         private gameService: GameService,
         private router: Router,
         private confirmationService: ConfirmationService,
+        private gamePlayers: GamePlayersService,
         @Inject(DOCUMENT) private document: any
     ) {
         this.menuOptions = this.getMenuOptions();
@@ -66,7 +69,10 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 accept: () => {
                     this.gameService.restartScore();
                     if (this.gameSettings && this.gameSettings.participants) {
-                        this.gameService.setPlayers(this.gameSettings.participants);
+                        this.gameService.setPlayers(
+                            this.gameSettings.participants,
+                            this.gameSettings.optionals.lockWinnerTeam
+                        );
                     }
                 },
                 closeOnEscape: false
@@ -74,26 +80,24 @@ export class GamePageComponent implements OnInit, OnDestroy {
         });
     }
 
-    getPlayerAt(game: Game, teamIndex: TeamIndex, playerIndex: PlayerIndex): Player {
-        return game.teams[teamIndex].players[playerIndex];
+    getPlayerByPosition(game: Game, playerPosition: PlayerPosition): Player {
+        return this.gamePlayers.getPlayerByPosition(game, playerPosition);
     }
 
     getScoreAt(game: Game, teamIndex: TeamIndex): Score {
         return game.teams[teamIndex].score;
     }
 
-    openPlayerSelector(teamIndex: TeamIndex, playerIndex: PlayerIndex): void {
-        this.playerSelectorTeamIndex = teamIndex;
-        this.playerSelectorPlayerIndex = playerIndex;
-        this.playerSelectorHeader = `Elegir para el equipo ${teamIndex + 1}`;
+    openPlayerSelector(playerPosition: PlayerPosition): void {
+        this.playerSelectorPlayerPosition = playerPosition;
+        this.playerSelectorHeader = `Elegir para el equipo ${playerPosition.teamIndex + 1}`;
         this.displayPlayerSelector = true;
     }
 
     playerSelectorClick({ option }: { option: Player }): void {
         this.displayPlayerSelector = false;
-        this.gameService.setPlayerAt(this.playerSelectorTeamIndex!, this.playerSelectorPlayerIndex!, option);
-        this.playerSelectorTeamIndex = null;
-        this.playerSelectorPlayerIndex = null;
+        this.gameService.setPlayerAt(this.playerSelectorPlayerPosition!, option);
+        this.playerSelectorPlayerPosition = null;
     }
 
     incrementCounterAt(teamIndex: TeamIndex): void {

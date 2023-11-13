@@ -62,12 +62,15 @@ export class HomePageComponent implements OnInit {
         this.router.navigate(['game']);
     }
 
-    private buildGameSettingsForm({ participants, goalScore }: GameSettings): void {
+    private buildGameSettingsForm({ participants, goalScore, optionals }: GameSettings): void {
         this.gameSettingsForm = this.fb.group({
             participants: this.fb.array([], [Validators.minLength(4)]),
             goalScore: this.fb.group({
                 points: this.fb.control(goalScore.points, [Validators.min(1), Validators.max(6)]),
                 sets: this.fb.control(goalScore.sets, [Validators.min(1), Validators.max(3)])
+            }),
+            optionals: this.fb.group({
+                lockWinnerTeam: this.fb.control(optionals.lockWinnerTeam, Validators.required)
             })
         });
         for (let index = 0; index < participants.length; index++) {

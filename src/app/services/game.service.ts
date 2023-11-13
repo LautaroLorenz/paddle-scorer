@@ -5,6 +5,9 @@ import { Player, PlayerIndex, RequiredPlayers } from '../models/player.model';
 import { TeamIndex } from '../models/team.model';
 import { Snapshot } from '../core/snapshot.core';
 import { GoalScore } from '../models/goal-score.model';
+import { GameStatsService } from './game-stats.service';
+import { PLAYER_POSITIONS, PlayerPosition } from '../models/player-position.model';
+import { GamePlayersService } from './game-players.service';
 
 @Injectable({
     providedIn: 'root'
@@ -14,7 +17,10 @@ export class GameService {
     private gameEnd = new Subject<Game>();
     private snapshot: Snapshot<Game>;
 
-    constructor() {
+    constructor(
+        private gameStatsService: GameStatsService,
+        private gamePlayersService: GamePlayersService
+    ) {
         const gameSnapshotStatus = new GameSnapshotStatus();
         this.snapshot = new Snapshot(gameSnapshotStatus);
     }
@@ -34,7 +40,8 @@ export class GameService {
         this.snapshot.generate(game);
     }
 
-    setPlayerAt(teamIndexToSet: TeamIndex, playerIndexToSet: PlayerIndex, playerToSet: Player): void {
+    setPlayerAt(playerPosition: PlayerPosition, playerToSet: Player): void {
+        const { teamIndex: teamIndexToSet, playerIndex: playerIndexToSet } = playerPosition;
         const gameSnapshot: Game = this.snapshot.get();
         let teamIndexAux: TeamIndex | null = null,
             playerIndexAux: PlayerIndex | null = null,
@@ -58,25 +65,9 @@ export class GameService {
         this.snapshot.generate(gameSnapshot);
     }
 
-    setPlayers(participants: Player[]): void {
+    setPlayers(participants: Player[], lockWinnerTeam: boolean): void {
         const endGames: Game[] = this.snapshot.history.filter(({ winnerTeamIndex }) => winnerTeamIndex !== null);
-        const timesPlayedPerPlayer: Record<number, number> = {};
-        const timesWinnedPerPlayer: Record<number, number> = {};
-        for (let index = 0; index < participants.length; index++) {
-            const player = participants[index];
-            timesPlayedPerPlayer[player.id] = endGames.filter(
-                ({ teams: [team1, team2] }) =>
-                    team1.players[0]?.id === player.id ||
-                    team1.players[1]?.id === player.id ||
-                    team2.players[0]?.id === player.id ||
-                    team2.players[1]?.id === player.id
-            ).length;
-            timesWinnedPerPlayer[player.id] = endGames.filter(
-                ({ teams, winnerTeamIndex }) =>
-                    teams[winnerTeamIndex!].players[0]?.id === player.id ||
-                    teams[winnerTeamIndex!].players[1]?.id === player.id
-            ).length;
-        }
+        const { timesPlayedPerPlayer, timesWinnedPerPlayer } = this.gameStatsService.getStats(endGames, participants);
 
         const participantsCopy: Player[] = [...participants];
         const nextPlayers = participantsCopy.sort((playerA, playerB) => {
@@ -98,11 +89,10 @@ export class GameService {
 
             return 0;
         });
-
-        nextPlayers[0] && this.setPlayerAt(0, 0, nextPlayers[0]);
-        nextPlayers[1] && this.setPlayerAt(0, 1, nextPlayers[1]);
-        nextPlayers[2] && this.setPlayerAt(1, 0, nextPlayers[2]);
-        nextPlayers[3] && this.setPlayerAt(1, 1, nextPlayers[3]);
+        
+        PLAYER_POSITIONS.forEach((position, index) => {
+            this.setPlayerAt(position, nextPlayers[index]);
+        });
     }
 
     incrementScoreAt(goalScore: GoalScore, teamIndexToIncrement: TeamIndex, mode: 'counter' | 'point' | 'set'): void {
