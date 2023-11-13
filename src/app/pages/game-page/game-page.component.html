@@ -14,43 +14,15 @@
     </div>
     <app-stadium
         class="stadium"
-        [ngClass]="{ 'stadium-animation': game.isGoldenPoint }">
-        <app-score
-            class="stadium-score score-team-0"
-            score-team-0
-            [score]="getScoreAt(game, 0)"
-            (counterClick)="incrementCounterAt(0)">
-        </app-score>
-        <app-player
-            slot-0-0
-            class="stadium-player player-team-0"
-            [player]="getPlayerByPosition(game, PLAYER_POSITIONS[0])"
-            (playerClick)="openPlayerSelector(PLAYER_POSITIONS[0])">
-        </app-player>
-        <app-player
-            slot-0-1
-            class="stadium-player player-team-0"
-            [player]="getPlayerByPosition(game, PLAYER_POSITIONS[1])"
-            (playerClick)="openPlayerSelector(PLAYER_POSITIONS[1])">
-        </app-player>
-        <app-player
-            slot-1-0
-            class="stadium-player player-team-1"
-            [player]="getPlayerByPosition(game, PLAYER_POSITIONS[2])"
-            (playerClick)="openPlayerSelector(PLAYER_POSITIONS[2])">
-        </app-player>
-        <app-player
-            slot-1-1
-            class="stadium-player player-team-1"
-            [player]="getPlayerByPosition(game, PLAYER_POSITIONS[3])"
-            (playerClick)="openPlayerSelector(PLAYER_POSITIONS[3])">
-        </app-player>
-        <app-score
-            class="stadium-score score-team-1"
-            score-team-1
-            [score]="getScoreAt(game, 1)"
-            (counterClick)="incrementCounterAt(1)">
-        </app-score>
+        [hasSpecialEffects]="game.isGoldenPoint"
+        [player1]="getPlayerByPosition(game, PLAYER_POSITIONS[0])"
+        [player2]="getPlayerByPosition(game, PLAYER_POSITIONS[1])"
+        [player3]="getPlayerByPosition(game, PLAYER_POSITIONS[2])"
+        [player4]="getPlayerByPosition(game, PLAYER_POSITIONS[3])"
+        [scoreTeam1]="getScoreAt(game, 0)"
+        [scoreTeam2]="getScoreAt(game, 1)"
+        (playerClick)="openPlayerSelector($event)"
+        (scoreClick)="incrementCounterAt($event)">
     </app-stadium>
     <p-dialog
         position="right"
