@@ -69,34 +69,8 @@ export class GameService {
         const endGames: Game[] = this.snapshot.history.filter(({ winnerTeamIndex }) => winnerTeamIndex !== null);
         const { timesPlayedPerPlayer, timesWinnedPerPlayer } = this.gameStatsService.getStats(endGames, participants);
 
-        let lastGame: Game | null = null;
-        if (endGames[endGames.length - 1]) {
-            lastGame = endGames[endGames.length - 1];
-        }
-
-        let lastWinnerTeam: Team | null = null;
-        if (lastGame) {
-            lastWinnerTeam = lastGame.teams[lastGame.winnerTeamIndex!];
-        }
-
         const participantsCopy: Player[] = [...participants];
         const nextPlayers = participantsCopy.sort((playerA, playerB) => {
-            if (lockWinnerTeam && lastWinnerTeam) {
-                // Prioridad para quien ganó
-                if (
-                    this.gamePlayersService.playerPlaysGameByTeam(playerA, lastWinnerTeam) &&
-                    !this.gamePlayersService.playerPlaysGameByTeam(playerB, lastWinnerTeam)
-                ) {
-                    return -1;
-                }
-                if (
-                    !this.gamePlayersService.playerPlaysGameByTeam(playerA, lastWinnerTeam) &&
-                    this.gamePlayersService.playerPlaysGameByTeam(playerB, lastWinnerTeam)
-                ) {
-                    return 1;
-                }
-            }
-
             // Prioridad para quien menos jugó
             if (timesPlayedPerPlayer[playerA.id] > timesPlayedPerPlayer[playerB.id]) {
                 return 1;
