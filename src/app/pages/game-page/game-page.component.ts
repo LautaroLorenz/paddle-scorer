@@ -107,6 +107,10 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.gameService.incrementScoreAt(this.gameSettings.goalScore, teamIndex, 'counter');
     }
 
+    undo(): void {
+        this.gameService.undo();
+    }
+
     ngOnDestroy(): void {
         this._onDestroy.next();
         this._onDestroy.complete();
@@ -120,7 +124,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 label: 'deshacer cambio',
                 icon: 'pi pi-undo',
                 command: () => {
-                    this.gameService.undo();
+                    this.undo();
                 }
             },
             {
