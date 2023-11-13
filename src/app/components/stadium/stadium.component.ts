@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from 
 import { PLAYER_POSITIONS, PlayerPosition } from 'src/app/models/player-position.model';
 import { Player } from 'src/app/models/player.model';
 import { Score } from 'src/app/models/score.model';
-import { TeamIndex } from 'src/app/models/team.model';
+import { Team, TeamIndex } from 'src/app/models/team.model';
 
 @Component({
     selector: 'app-stadium',
@@ -15,6 +15,8 @@ export class StadiumComponent {
     @Input() player2!: Player;
     @Input() player3!: Player;
     @Input() player4!: Player;
+    @Input() team1!: Team;
+    @Input() team2!: Team;
     @Input() scoreTeam1!: Score;
     @Input() scoreTeam2!: Score;
     @Input() hasSpecialEffects!: boolean;

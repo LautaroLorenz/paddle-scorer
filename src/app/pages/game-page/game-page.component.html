@@ -25,6 +25,8 @@
         [player2]="getPlayerByPosition(game, PLAYER_POSITIONS[1])"
         [player3]="getPlayerByPosition(game, PLAYER_POSITIONS[2])"
         [player4]="getPlayerByPosition(game, PLAYER_POSITIONS[3])"
+        [team1]="getTeamAt(game, 0)"
+        [team2]="getTeamAt(game, 1)"
         [scoreTeam1]="getScoreAt(game, 0)"
         [scoreTeam2]="getScoreAt(game, 1)"
         (playerClick)="openPlayerSelector($event)"

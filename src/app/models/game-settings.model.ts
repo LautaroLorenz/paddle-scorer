@@ -10,25 +10,25 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
     participants: [
         {
             id: 0,
-            name: '',
-            color: getRandomBrightHexColor()
+            name: ''
         },
         {
             id: 1,
-            name: '',
-            color: getRandomBrightHexColor()
+            name: ''
         },
         {
             id: 2,
-            name: '',
-            color: getRandomBrightHexColor()
+            name: ''
         },
         {
             id: 3,
-            name: '',
-            color: getRandomBrightHexColor()
+            name: ''
         }
     ],
+    teams: {
+        colorTeam1: getRandomBrightHexColor(),
+        colorTeam2: getRandomBrightHexColor()
+    },
     optionals: {
         lockWinnerTeam: false
     }
@@ -38,8 +38,14 @@ export interface GameSettingsOptionals {
     lockWinnerTeam: boolean;
 }
 
+export interface TeamsSettings {
+    colorTeam1: string;
+    colorTeam2: string;
+}
+
 export interface GameSettings {
     participants: [...RequiredPlayers, ...Player[]];
     goalScore: GoalScore;
     optionals: GameSettingsOptionals;
+    teams: TeamsSettings;
 }

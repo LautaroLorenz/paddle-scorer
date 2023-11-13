@@ -6,10 +6,12 @@
         <div class="players">
             <app-player
                 [player]="player1"
+                [team]="team1"
                 (playerClick)="playerClick.emit(PLAYER_POSITIONS[0])">
             </app-player>
             <app-player
                 [player]="player2"
+                [team]="team1"
                 (playerClick)="playerClick.emit(PLAYER_POSITIONS[1])">
             </app-player>
         </div>
@@ -28,10 +30,12 @@
         <div class="players">
             <app-player
                 [player]="player3"
+                [team]="team2"
                 (playerClick)="playerClick.emit(PLAYER_POSITIONS[2])">
             </app-player>
             <app-player
                 [player]="player4"
+                [team]="team2"
                 (playerClick)="playerClick.emit(PLAYER_POSITIONS[3])">
             </app-player>
         </div>
