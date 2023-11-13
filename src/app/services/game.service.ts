@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { DEFAULT_GAME, Game, GameSnapshotStatus } from '../models/game.model';
 import { Player, PlayerIndex, RequiredPlayers } from '../models/player.model';
-import { Team, TeamIndex } from '../models/team.model';
+import { TeamIndex } from '../models/team.model';
 import { Snapshot } from '../core/snapshot.core';
 import { GoalScore } from '../models/goal-score.model';
 import { GameStatsService } from './game-stats.service';
