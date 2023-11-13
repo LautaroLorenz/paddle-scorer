@@ -64,7 +64,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 header: victoryHeader,
                 message: victoryMessage,
                 icon: 'pi pi-heart-fill',
-                acceptLabel: 'Reiniciar',
+                acceptLabel: 'Comenzar siguiente partido',
                 rejectVisible: false,
                 accept: () => {
                     this.gameService.restartScore();
