@@ -1,26 +1,51 @@
-<div class="side side-left">
-    <div class="side-score score-left">
-        <ng-content select="[score-team-0]"></ng-content>
+<div
+    class="teams"
+    [ngClass]="{ 'special-effect': hasSpecialEffects }">
+    <div class="team team-1">
+        <div class="team-number">EQUIPO 1</div>
+        <div class="players">
+            <app-player
+                [player]="player1"
+                [team]="team1"
+                (playerClick)="playerClick.emit(PLAYER_POSITIONS[0])">
+            </app-player>
+            <app-player
+                [player]="player2"
+                [team]="team1"
+                (playerClick)="playerClick.emit(PLAYER_POSITIONS[1])">
+            </app-player>
+        </div>
+
+        <div class="score">
+            <app-score
+                class="stadium-score"
+                [score]="scoreTeam1"
+                (counterClick)="scoreClick.emit(0)">
+            </app-score>
+        </div>
     </div>
-    <div class="side-slots slots-left">
-        <div class="side-slot slot-top">
-            <ng-content select="[slot-0-0]"></ng-content>
+
+    <div class="team team-2">
+        <div class="team-number">EQUIPO 2</div>
+        <div class="players">
+            <app-player
+                [player]="player3"
+                [team]="team2"
+                (playerClick)="playerClick.emit(PLAYER_POSITIONS[2])">
+            </app-player>
+            <app-player
+                [player]="player4"
+                [team]="team2"
+                (playerClick)="playerClick.emit(PLAYER_POSITIONS[3])">
+            </app-player>
         </div>
-        <div class="side-slot slot-bottom">
-            <ng-content select="[slot-0-1]"></ng-content>
+
+        <div class="score">
+            <app-score
+                class="stadium-score"
+                [score]="scoreTeam2"
+                (counterClick)="scoreClick.emit(1)">
+            </app-score>
         </div>
-    </div>
-</div>
-<div class="side side-right">
-    <div class="side-slots slots-right">
-        <div class="side-slot slot-top">
-            <ng-content select="[slot-1-0]"></ng-content>
-        </div>
-        <div class="side-slot slot-bottom">
-            <ng-content select="[slot-1-1]"></ng-content>
-        </div>
-    </div>
-    <div class="side-score score-right">
-        <ng-content select="[score-team-1]"></ng-content>
     </div>
 </div>

@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { take } from 'rxjs';
-import { getRandomBrightHexColor } from 'src/app/core/color-generator.core';
 import { GameSettings } from 'src/app/models/game-settings.model';
 import { GameSettingsService } from 'src/app/services/game-settings.service';
 
@@ -37,8 +36,7 @@ export class HomePageComponent implements OnInit {
         this.participants.controls.push(
             this.fb.group({
                 id: this.fb.control(id, [Validators.required]),
-                name: this.fb.control('', [Validators.required]),
-                color: this.fb.control(getRandomBrightHexColor(), [Validators.required])
+                name: this.fb.control('', [Validators.required])
             })
         );
         this.participants.updateValueAndValidity();
@@ -49,25 +47,22 @@ export class HomePageComponent implements OnInit {
         this.participants.updateValueAndValidity();
     }
 
-    refreshColors(): void {
-        for (let index = 0; index < this.participants.controls.length; index++) {
-            const participantControl = this.participants.controls[index];
-            participantControl.get('color')?.setValue(getRandomBrightHexColor());
-        }
-    }
-
     startGame(): void {
         const gameSettings: GameSettings = this.gameSettingsForm.getRawValue();
         this.gameSettingsService.saveGameSettingsOnStorage(gameSettings);
         this.router.navigate(['game']);
     }
 
-    private buildGameSettingsForm({ participants, goalScore, optionals }: GameSettings): void {
+    private buildGameSettingsForm({ participants, goalScore, optionals, teams }: GameSettings): void {
         this.gameSettingsForm = this.fb.group({
             participants: this.fb.array([], [Validators.minLength(4)]),
             goalScore: this.fb.group({
                 points: this.fb.control(goalScore.points, [Validators.min(1), Validators.max(6)]),
                 sets: this.fb.control(goalScore.sets, [Validators.min(1), Validators.max(3)])
+            }),
+            teams: this.fb.group({
+                colorTeam1: this.fb.control(teams.colorTeam1, [Validators.required]),
+                colorTeam2: this.fb.control(teams.colorTeam2, [Validators.required])
             }),
             optionals: this.fb.group({
                 lockWinnerTeam: this.fb.control(optionals.lockWinnerTeam, Validators.required)

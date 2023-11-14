@@ -1,72 +1,69 @@
-@use 'sass:math';
+.teams {
+  display: flex;
+  gap: 16px;
+  padding: 32px 16px;
+  flex: 0 0 100%;
 
-$line-floor-size: 4px;
-$line-margins-size: 2px;
-$line-red-size: 8px;
-$line-floor-color: white;
-$line-margins-color: grey;
-$line-red-color: rgb(205, 209, 149);
-
-:host {
+  .team {
     display: flex;
-    width: 100%;
-    height: 100%;
-    background-image: url('../../../assets/img/paddle-stadium-texture.jpg');
-    background-position: center center;
-    background-repeat: repeat;
-    background-size: auto;
-    position: relative;
+    flex-direction: column;
+    flex: 1 1 50%;
+    overflow: hidden;
+    gap: 16px;
 
-    .side {
-        display: flex;
-        height: 100%;
-        flex: 0 0 50%;
-        overflow: hidden;
-        border-top: $line-margins-size solid $line-margins-color;
-        border-bottom: $line-margins-size solid $line-margins-color;
-
-        &.side-left {
-            border-left: $line-margins-size solid $line-margins-color;
-        }
-
-        &.side-right {
-            border-right: $line-margins-size solid $line-margins-color;
-        }
-
-        .side-score {
-            display: flex;
-            flex: 0 0 25%;
-        }
-
-        .side-slots {
-            display: flex;
-            flex: 0 1 75%;
-            height: 100%;
-            flex-direction: column;
-            overflow: hidden;
-
-            &.slots-left {
-                border-left: $line-floor-size solid $line-floor-color;
-                border-right: math.div($line-red-size, 2) solid $line-red-color;
-            }
-
-            &.slots-right {
-                border-right: $line-floor-size solid $line-floor-color;
-                border-left: math.div($line-red-size, 2) solid $line-red-color;
-            }
-
-            .side-slot {
-                display: flex;
-                flex: 1;
-
-                &.slot-top {
-                    border-bottom: math.div($line-floor-size, 2) solid $line-floor-color;
-                }
-
-                &.slot-bottom {
-                    border-top: math.div($line-floor-size, 2) solid $line-floor-color;
-                }
-            }
-        }
+    .team-number {
+      font-size: 18px;
+      text-align: center;
     }
+
+    .players {
+      display: flex;
+      gap: 1px;
+      flex-direction: column;
+    }
+
+    ::ng-deep app-player {
+      .player-background-color {
+        border: 1px solid rgb(220, 220, 220);
+        border-radius: 8px;
+      }
+    }
+  }
+
+  &.special-effect {
+    --border-size: 8px;
+    --border-angle: 0turn;
+    background-color: #121123;
+    background-image: conic-gradient(
+        from var(--border-angle),
+        #213,
+        #112 50%,
+        #213
+      ),
+      conic-gradient(from var(--border-angle), transparent 20%, #08f, #f03);
+    background-size:
+      calc(100% - (var(--border-size) * 2))
+        calc(100% - (var(--border-size) * 2)),
+      cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    animation: bg-spin 2s cubic-bezier(0.25, 0.71, 0.92, 0.49) infinite;
+
+    .team-number,
+    .players {
+      color: white;
+    }
+  }
+}
+
+@keyframes bg-spin {
+  to {
+    --border-angle: 1turn;
+  }
+}
+
+@property --border-angle {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0turn;
 }

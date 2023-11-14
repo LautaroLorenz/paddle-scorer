@@ -2,7 +2,10 @@ import { SnapshotStatus } from '../core/snapshot.core';
 import { PlayerSnapshotStatus, RequiredPlayers } from './player.model';
 import { Team, TeamIndex } from './team.model';
 
-export const DEFAULT_GAME: (players: RequiredPlayers) => Game = (players) => ({
+export const DEFAULT_GAME: (players: RequiredPlayers, teamColors: [string, string]) => Game = (
+    players,
+    teamColors: [string, string]
+) => ({
     teams: [
         {
             players: [players[0], players[1]],
@@ -10,7 +13,8 @@ export const DEFAULT_GAME: (players: RequiredPlayers) => Game = (players) => ({
                 points: 0,
                 sets: 0,
                 counter: 0
-            }
+            },
+            color: teamColors[0]
         },
         {
             players: [players[2], players[3]],
@@ -18,7 +22,8 @@ export const DEFAULT_GAME: (players: RequiredPlayers) => Game = (players) => ({
                 points: 0,
                 sets: 0,
                 counter: 0
-            }
+            },
+            color: teamColors[1]
         }
     ],
     isGoldenPoint: false,
@@ -44,8 +49,8 @@ export class GameSnapshotStatus implements SnapshotStatus<Game> {
             winnerTeamIndex,
             teams: [team1, team2]
         } = game;
-        const { score: score1, players: players1 } = team1;
-        const { score: score2, players: players2 } = team2;
+        const { score: score1, players: players1, color: color1 } = team1;
+        const { score: score2, players: players2, color: color2 } = team2;
 
         return {
             isGoldenPoint: isGoldenPoint,
@@ -60,7 +65,8 @@ export class GameSnapshotStatus implements SnapshotStatus<Game> {
                     players: [
                         this.playerSnapshotStatus.clone(players1[0]),
                         this.playerSnapshotStatus.clone(players1[1])
-                    ]
+                    ],
+                    color: color1
                 },
                 {
                     score: {
@@ -71,7 +77,8 @@ export class GameSnapshotStatus implements SnapshotStatus<Game> {
                     players: [
                         this.playerSnapshotStatus.clone(players2[0]),
                         this.playerSnapshotStatus.clone(players2[1])
-                    ]
+                    ],
+                    color: color2
                 }
             ]
         };

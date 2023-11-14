@@ -6,7 +6,7 @@ import { GameService } from 'src/app/services/game.service';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { Score } from 'src/app/models/score.model';
-import { TeamIndex } from 'src/app/models/team.model';
+import { Team, TeamIndex } from 'src/app/models/team.model';
 import { DOCUMENT } from '@angular/common';
 import { GameSettingsService } from 'src/app/services/game-settings.service';
 import { GameSettings } from 'src/app/models/game-settings.model';
@@ -46,7 +46,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.gameSettingsService.gameSettings$.pipe(take(1)).subscribe((gameSettings) => {
             this.gameSettings = gameSettings;
             const [player1, player2, player3, player4] = gameSettings.participants;
-            this.gameService.initGame([player1, player2, player3, player4]);
+            this.gameService.initGame([player1, player2, player3, player4], gameSettings.teams);
         });
         this.gameService.gameEnd$.pipe(takeUntil(this._onDestroy)).subscribe((game) => {
             const { teams, winnerTeamIndex } = game;
@@ -64,7 +64,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 header: victoryHeader,
                 message: victoryMessage,
                 icon: 'pi pi-heart-fill',
-                acceptLabel: 'Reiniciar',
+                acceptLabel: 'Comenzar siguiente partido',
                 rejectVisible: false,
                 accept: () => {
                     this.gameService.restartScore();
@@ -82,6 +82,10 @@ export class GamePageComponent implements OnInit, OnDestroy {
 
     getPlayerByPosition(game: Game, playerPosition: PlayerPosition): Player {
         return this.gamePlayers.getPlayerByPosition(game, playerPosition);
+    }
+
+    getTeamAt(game: Game, teamIndex: TeamIndex): Team {
+        return game.teams[teamIndex];
     }
 
     getScoreAt(game: Game, teamIndex: TeamIndex): Score {
@@ -107,6 +111,10 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.gameService.incrementScoreAt(this.gameSettings.goalScore, teamIndex, 'counter');
     }
 
+    undo(): void {
+        this.gameService.undo();
+    }
+
     ngOnDestroy(): void {
         this._onDestroy.next();
         this._onDestroy.complete();
@@ -120,7 +128,7 @@ export class GamePageComponent implements OnInit, OnDestroy {
                 label: 'deshacer cambio',
                 icon: 'pi pi-undo',
                 command: () => {
-                    this.gameService.undo();
+                    this.undo();
                 }
             },
             {

@@ -7,7 +7,7 @@ import { Snapshot } from '../core/snapshot.core';
 import { GoalScore } from '../models/goal-score.model';
 import { GameStatsService } from './game-stats.service';
 import { PLAYER_POSITIONS, PlayerPosition } from '../models/player-position.model';
-import { GamePlayersService } from './game-players.service';
+import { TeamsSettings } from '../models/game-settings.model';
 
 @Injectable({
     providedIn: 'root'
@@ -17,10 +17,7 @@ export class GameService {
     private gameEnd = new Subject<Game>();
     private snapshot: Snapshot<Game>;
 
-    constructor(
-        private gameStatsService: GameStatsService,
-        private gamePlayersService: GamePlayersService
-    ) {
+    constructor(private gameStatsService: GameStatsService) {
         const gameSnapshotStatus = new GameSnapshotStatus();
         this.snapshot = new Snapshot(gameSnapshotStatus);
     }
@@ -33,8 +30,8 @@ export class GameService {
         return this.gameEnd.asObservable();
     }
 
-    initGame(players: RequiredPlayers): void {
-        const game: Game = DEFAULT_GAME(players);
+    initGame(players: RequiredPlayers, teamsSettings: TeamsSettings): void {
+        const game: Game = DEFAULT_GAME(players, [teamsSettings.colorTeam1, teamsSettings.colorTeam2]);
         this.game.next(game);
         this.snapshot.clearHistory();
         this.snapshot.generate(game);
@@ -89,7 +86,7 @@ export class GameService {
 
             return 0;
         });
-        
+
         PLAYER_POSITIONS.forEach((position, index) => {
             this.setPlayerAt(position, nextPlayers[index]);
         });
@@ -156,7 +153,7 @@ export class GameService {
         const [team1, team2] = gameSnapshot.teams;
         const [player1, player2] = team1.players;
         const [player3, player4] = team2.players;
-        const game = DEFAULT_GAME([player1, player2, player3, player4]);
+        const game = DEFAULT_GAME([player1, player2, player3, player4], [team1.color, team2.color]);
         this.game.next(game);
         this.snapshot.generate(game);
     }

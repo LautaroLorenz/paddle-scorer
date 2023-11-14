@@ -1,57 +1,76 @@
 :host {
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 
-    form {
+    .participants {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+
+      .participants-div {
+        display: flex;
+        margin-bottom: 8px;
+        gap: 8px;
+      }
+
+      .participant {
+        display: flex;
+        gap: 16px;
+      }
+    }
+
+    .score {
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      gap: 8px;
+
+      .score-points,
+      .score-sets {
         display: flex;
         flex-direction: column;
+        gap: 8px;
+
+        ::ng-deep .p-inputnumber {
+          width: 6rem;
+        }
+      }
+    }
+
+    .teams {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      .teams-colors {
+        display: flex;
         gap: 32px;
 
-        .participants {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-
-            .participants-div {
-                display: flex;
-                margin-bottom: 8px;
-                gap: 8px;
-            }
-
-            .participant {
-                display: flex;
-                gap: 16px;
-            }
+        ::ng-deep p-colorpicker {
+          input {
+            width: 100px;
+            height: 100px;
+          }
         }
-
-        .score {
-            display: flex;
-            align-items: center;
-            justify-content: space-evenly;
-            gap: 8px;
-
-            .score-points,
-            .score-sets {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-
-                ::ng-deep .p-inputnumber {
-                    width: 6rem;
-                }
-            }
-        }
-
-        .optionals {
-            .field-checkbox {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
-        }
+      }
     }
 
-    .start-button {
-        margin: 32px 0px;
+    .optionals {
+      .field-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
     }
+  }
+
+  .start-button {
+    margin: 32px 0px;
+  }
 }

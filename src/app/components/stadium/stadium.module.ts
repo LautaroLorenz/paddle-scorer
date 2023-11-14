@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StadiumComponent } from './stadium.component';
+import { PlayerModule } from '../player/player.module';
+import { ScoreModule } from '../score/score.module';
 
 
 
@@ -9,7 +11,9 @@ import { StadiumComponent } from './stadium.component';
     StadiumComponent
   ],
   imports: [
-    CommonModule
+    CommonModule,
+    PlayerModule,
+    ScoreModule
   ],
   exports: [
     StadiumComponent

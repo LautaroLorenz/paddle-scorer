@@ -13,13 +13,6 @@
                     iconPos="left"
                     (click)="addParticipantControl()">
                 </p-button>
-                <p-button
-                    class="participants-button"
-                    icon="pi pi-refresh"
-                    label="Colores"
-                    iconPos="left"
-                    (click)="refreshColors()">
-                </p-button>
             </div>
             <div
                 class="participant"
@@ -72,18 +65,15 @@
                 </p-inputNumber>
             </div>
         </div>
-        <!-- <div
-            class="optionals"
-            formGroupName="optionals">
-            <div class="field-checkbox">
-                <p-checkbox
-                    formControlName="lockWinnerTeam"
-                    inputId="lockWinnerTeam"
-                    [binary]="true">
-                </p-checkbox>
-                <label for="lockWinnerTeam">Equipo ganador sigue jugando</label>
+        <div
+            class="teams"
+            formGroupName="teams">
+            <span class="teams-span">Equipos</span>
+            <div class="teams-colors">
+                <p-colorPicker formControlName="colorTeam1"></p-colorPicker>
+                <p-colorPicker formControlName="colorTeam2"></p-colorPicker>
             </div>
-        </div> -->
+        </div>
     </form>
     <button
         pButton
