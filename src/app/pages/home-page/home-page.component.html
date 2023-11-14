@@ -78,9 +78,8 @@
     <button
         pButton
         type="button"
-        class="p-button-raised p-button-rounded p-button-success start-button"
+        class="p-button-raised p-button-success start-button"
         [disabled]="!gameSettingsForm.valid"
-        (click)="startGame()">
-        Comenzar
-    </button>
+        label="Comenzar"
+        (click)="startGame()"></button>
 </app-center-layout>
