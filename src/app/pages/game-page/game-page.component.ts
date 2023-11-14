@@ -1,7 +1,7 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject, take, takeUntil } from 'rxjs';
 import { Game } from 'src/app/models/game.model';
-import { Player } from 'src/app/models/player.model';
+import { Player, RequiredPlayers } from 'src/app/models/player.model';
 import { GameService } from 'src/app/services/game.service';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { GameSettingsService } from 'src/app/services/game-settings.service';
 import { GameSettings } from 'src/app/models/game-settings.model';
 import { PLAYER_POSITIONS, PlayerPosition } from 'src/app/models/player-position.model';
 import { GamePlayersService } from 'src/app/services/game-players.service';
+import { randomSortArray } from 'src/app/core/random-sort-array';
 
 @Component({
     templateUrl: './game-page.component.html',
@@ -46,7 +47,8 @@ export class GamePageComponent implements OnInit, OnDestroy {
         this.gameSettingsService.gameSettings$.pipe(take(1)).subscribe((gameSettings) => {
             this.gameSettings = gameSettings;
             const [player1, player2, player3, player4] = gameSettings.participants;
-            this.gameService.initGame([player1, player2, player3, player4], gameSettings.teams);
+            const participants = randomSortArray([player1, player2, player3, player4]) as RequiredPlayers;
+            this.gameService.initGame(participants, gameSettings.teams);
         });
         this.gameService.gameEnd$.pipe(takeUntil(this._onDestroy)).subscribe((game) => {
             const { teams, winnerTeamIndex } = game;
