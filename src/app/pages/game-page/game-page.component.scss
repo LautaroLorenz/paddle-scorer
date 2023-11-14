@@ -1,3 +1,5 @@
+$game-tittle-height: 54px;
+
 :host {
   display: flex;
   width: 100%;
@@ -9,6 +11,7 @@
     display: flex;
     background: #bed1eb;
     border-bottom: 1px solid rgb(124, 124, 124);
+    height: $game-tittle-height;
 
     .game-h1 {
       display: flex;
@@ -22,6 +25,6 @@
 
   app-stadium {
     display: flex;
-    height: 100%;
+    height: calc(100% - $game-tittle-height);
   }
 }
