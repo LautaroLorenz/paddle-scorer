@@ -46,9 +46,8 @@ export class GamePageComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.gameSettingsService.gameSettings$.pipe(take(1)).subscribe((gameSettings) => {
             this.gameSettings = gameSettings;
-            const [player1, player2, player3, player4] = gameSettings.participants;
-            const participants = randomSortArray([player1, player2, player3, player4]) as RequiredPlayers;
-            this.gameService.initGame(participants, gameSettings.teams);
+            const [player1, player2, player3, player4] = randomSortArray(gameSettings.participants) as RequiredPlayers;
+            this.gameService.initGame([player1, player2, player3, player4], gameSettings.teams);
         });
         this.gameService.gameEnd$.pipe(takeUntil(this._onDestroy)).subscribe((game) => {
             const { teams, winnerTeamIndex } = game;
